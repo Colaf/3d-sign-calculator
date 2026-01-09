@@ -7579,9 +7579,9 @@ const PRICES_DATA = {
                     return { total: 0, breakdown: ['❌ Ошибка: геометрия объекта не рассчитана'] };
                 }
                 
-                // Учитываем масштаб пользователя
-                const userScaleX = svgObj.scale?.x || 1;
-                const userScaleY = svgObj.scale?.y || 1;
+                // Учитываем масштаб пользователя (вычисляем из текущих размеров)
+                const userScaleX = (svgObj.currentWidth || svgObj.realWidth) / svgObj.realWidth;
+                const userScaleY = (svgObj.currentHeight || svgObj.realHeight) / svgObj.realHeight;
                 const avgScale = userScaleX * userScaleY;
                 
                 // РЕАЛЬНАЯ площадь контуров (мм² → м²)
