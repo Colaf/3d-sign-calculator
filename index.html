@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.125.2/examples/js/controls/OrbitControls.js" defer crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.125.2/examples/js/loaders/SVGLoader.js" defer crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer crossorigin="anonymous"></script>
     
     <!-- ПРАЙС-ЛИСТ ВСТРОЕН (для редактирования ищи PRICES_DATA ниже в коде) -->
     <script>
@@ -649,13 +650,14 @@ const PRICES_DATA = {
             display: flex;
             flex-wrap: wrap;
             align-items: flex-end;
-            gap: 10px;
-            max-width: 500px;
+            gap: 8px;
+            max-width: 300px;
             background: rgba(0,0,0,0.4); /* Небольшая подложка только под кнопками */
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.05);
+            height: 134px;
         }
 
         .svg-upload-zone {
@@ -1002,6 +1004,29 @@ const PRICES_DATA = {
         
         .btn-nav:active {
             transform: scale(0.95);
+        }
+        
+        .btn-add {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .btn-add:hover {
+            background: rgba(255,193,7,0.15);
+            border-color: rgba(255,193,7,0.5);
+            transform: translateY(-1px);
+        }
+        
+        .btn-add:active {
+            transform: translateY(0);
         }
         
         .btn-nav-tall {
@@ -1449,12 +1474,124 @@ const PRICES_DATA = {
         .custom-options::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+        
+        /* ПЛАВАЮЩАЯ ПАНЕЛЬ УПРАВЛЕНИЯ В СЦЕНЕ */
+        .scene-controls-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 340px;
+            background: rgba(20, 20, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 50;
+            height: 134px;
+        }
+        
+        .scene-controls-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        
+        .scene-control-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .scene-control-btn:hover {
+            background: rgba(255,193,7,0.3);
+            border-color: rgba(255,193,7,0.5);
+            transform: scale(1.05);
+        }
+        
+        .scene-control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Горизонтальный layout для основного контейнера */
+        .scene-controls-main {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .scene-controls-left {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .scene-controls-middle {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .scene-controls-right {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        /* Большие вертикальные кнопки ← и → */
+        .scene-control-tall {
+            height: 86px;
+        }
+        
+        /* Маленькие кнопки */
+        .scene-control-small {
+            height: 40px;
+        }
+        
+        .scene-controls-label {
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="game-viewport">
         <!-- 3D СЦЕНА НА ВЕСЬ ЭКРАН -->
         <canvas id="canvas-3d"></canvas>
+        
+        <!-- ПЛАВАЮЩАЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
+        <div class="scene-controls-overlay" id="scene-controls">
+            <div class="scene-controls-main">
+                <div class="scene-controls-left">
+                    <div class="scene-control-btn scene-control-tall" onmousedown="handleSceneControlMouseDown('left')" onmouseup="handleSceneControlMouseUp()" onmouseleave="handleSceneControlMouseUp()">←</div>
+                    <div class="scene-controls-middle">
+                        <div class="scene-control-btn scene-control-small" onmousedown="handleSceneControlMouseDown('up')" onmouseup="handleSceneControlMouseUp()" onmouseleave="handleSceneControlMouseUp()">↑</div>
+                        <div class="scene-control-btn scene-control-small" onmousedown="handleSceneControlMouseDown('down')" onmouseup="handleSceneControlMouseUp()" onmouseleave="handleSceneControlMouseUp()">↓</div>
+                    </div>
+                    <div class="scene-control-btn scene-control-tall" onmousedown="handleSceneControlMouseDown('right')" onmouseup="handleSceneControlMouseUp()" onmouseleave="handleSceneControlMouseUp()">→</div>
+                </div>
+                <div class="scene-controls-right">
+                    <div class="scene-control-btn scene-control-small" onmousedown="handleSceneControlMouseDown('backward')" onmouseup="handleSceneControlMouseUp()" onmouseleave="handleSceneControlMouseUp()">⇦</div>
+                    <div class="scene-control-btn scene-control-small" onmousedown="handleSceneControlMouseDown('forward')" onmouseup="handleSceneControlMouseUp()" onmouseleave="handleSceneControlMouseUp()">⇨</div>
+                </div>
+            </div>
+            <div class="scene-controls-label">Используйте стрелки клавиатуры</div>
+        </div>
 
         <!-- ЛЕВАЯ ПАНЕЛЬ (ИНФО И ЗАГРУЗКА) -->
         <div class="overlay-left">
@@ -1472,16 +1609,7 @@ const PRICES_DATA = {
                         <input type="file" id="svg-upload" accept=".svg">
                     </div>
                     
-                    <!-- 2. КНОПКА ПЕРЕКЛЮЧЕНИЯ ФОНА -->
-                    <button class="btn-toggle-wall active" id="toggle-wall" style="width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Переключить фон">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                    </button>
-                    
-                    <!-- 3. КНОПКА СОХРАНЕНИЯ -->
+                    <!-- 2. КНОПКА СОХРАНЕНИЯ -->
                     <button class="btn-save-scene" id="save-scene" style="width: 44px; height: 44px; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;" title="Сохранить">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -1558,16 +1686,24 @@ const PRICES_DATA = {
                     </div>
                 </div>
 
-                <!-- 3. ИНФОРМАЦИЯ О ЗАГРУЖЕННОМ SVG (СПРАВА) -->
-                <div id="svg-info" style="font-size: 10px; color: var(--text-dim); line-height: 1.3; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 8px; display: none; border: 1px solid rgba(255,255,255,0.05); max-width: 400px; height: 44px; display: flex; flex-direction: column; justify-content: center;">
-                    <!-- Информация о файле -->
-                </div>
-                
                 <!-- 4. ЦВЕТ ФОНА (ПОД ИКОНКАМИ) -->
-                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%;">
-                    <label style="font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 600;">ЦВЕТ ФОНА (ORACAL 641)</label>
-                    <div id="wall-colors-container" style="display: flex; gap: 3px; flex-wrap: wrap;">
-                        <!-- Цвета добавляются динамически -->
+                <div style="display: flex; gap: 8px; width: 100%; align-items: flex-start;">
+                    <!-- Кнопка переключения фона -->
+                    <button class="btn-toggle-wall active" id="toggle-wall" style="width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Переключить фон">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </button>
+                    <!-- Цвета в два ряда -->
+                    <div style="display: flex; flex-direction: column; gap: 3px; flex: 1;">
+                        <div id="wall-colors-row-1" style="display: flex; gap: 3px;">
+                            <!-- Первая половина цветов -->
+                        </div>
+                        <div id="wall-colors-row-2" style="display: flex; gap: 3px;">
+                            <!-- Вторая половина цветов -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1581,7 +1717,7 @@ const PRICES_DATA = {
             height: 40px;
             background: var(--accent-color);
             border-radius: 2px;
-            transition: top 0.3s ease;
+            transition: top 0.3s ease, right 0.3s ease, opacity 0.3s ease;
             z-index: 99;
             pointer-events: none;
         "></div>
@@ -1608,72 +1744,48 @@ const PRICES_DATA = {
             
             <!-- НАВИГАЦИЯ И МАСШТАБИРОВАНИЕ -->
             <div style="padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <!-- Кнопки перемещения -->
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <div class="compact-nav" style="flex: 1;">
-                        <div class="nav-row">
-                            <div class="nav-group" style="flex-direction: column; align-items: center;">
-                                <button onmousedown="startContinuousMove('up')" onmouseup="stopContinuousMove()" onmouseleave="stopContinuousMove()" class="btn-nav">↑</button>
-                                <div style="display: flex; gap: 4px;">
-                                    <button onmousedown="startContinuousMove('left')" onmouseup="stopContinuousMove()" onmouseleave="stopContinuousMove()" class="btn-nav">←</button>
-                                    <button onmousedown="startContinuousMove('down')" onmouseup="stopContinuousMove()" onmouseleave="stopContinuousMove()" class="btn-nav">↓</button>
-                                    <button onmousedown="startContinuousMove('right')" onmouseup="stopContinuousMove()" onmouseleave="stopContinuousMove()" class="btn-nav">→</button>
-                                </div>
-                            </div>
-                            <div class="nav-group" style="margin-left: 8px; align-items: center;">
-                                <button onmousedown="startContinuousMove('backward')" onmouseup="stopContinuousMove()" onmouseleave="stopContinuousMove()" class="btn-nav btn-nav-tall">⇦</button>
-                                <button onmousedown="startContinuousMove('forward')" onmouseup="stopContinuousMove()" onmouseleave="stopContinuousMove()" class="btn-nav btn-nav-tall">⇨</button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Кнопка сброса позиции -->
-                    <button onclick="resetPosition()" style="width: 32px; height: 52px; padding: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;" title="Сбросить позицию">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                            <path d="M3 3v5h5"></path>
-                        </svg>
-                    </button>
-                </div>
-                
                 <!-- Масштабирование -->
-                <div style="display: flex; gap: 4px; align-items: center;">
-                    <!-- Замочек -->
-                    <button id="lock-proportions" onclick="toggleProportions()" style="width: 32px; height: 32px; padding: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;" title="Пропорции">
-                        <svg id="lock-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
-                            <path id="lock-shackle" d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                    </button>
-                    
-                    <!-- Кнопка сброса масштаба -->
-                    <button onclick="resetScale()" style="width: 32px; height: 32px; padding: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;" title="Сбросить масштаб">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                            <path d="M3 3v5h5"></path>
-                        </svg>
-                    </button>
-                    
-                    <!-- Ширина -->
-                    <div style="display: flex; align-items: center; gap: 3px; flex: 1;">
-                        <button onclick="scaleObject('width', -10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
-                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;">
-                            <div style="font-size: 8px; color: rgba(255,255,255,0.4); line-height: 1; margin-bottom: 2px; letter-spacing: 0.5px;">Ш</div>
-                            <input type="number" id="scale-width" value="0" step="1" min="1" style="width: 100%; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;" onchange="onScaleInput('width')" onkeydown="onScaleKeypress(event, 'width')">
+                <div style="display: flex; gap: 6px; align-items: flex-start;">
+                    <!-- Левая колонка: контролы ширины и высоты -->
+                    <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                        <!-- Ширина -->
+                        <div style="display: flex; align-items: center; gap: 3px;">
+                            <button onclick="scaleObject('width', -10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1; margin-bottom: 2px;">ширина</div>
+                                <input type="number" id="scale-width" value="0" step="1" min="1" style="width: 100%; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;" onchange="onScaleInput('width')" onkeydown="onScaleKeypress(event, 'width')">
+                            </div>
+                            <button onclick="scaleObject('width', 10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
                         </div>
-                        <button onclick="scaleObject('width', 10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                        
+                        <!-- Высота -->
+                        <div style="display: flex; align-items: center; gap: 3px;">
+                            <button onclick="scaleObject('height', -10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1; margin-bottom: 2px;">высота</div>
+                                <input type="number" id="scale-height" value="0" step="1" min="1" style="width: 100%; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;" onchange="onScaleInput('height')" onkeydown="onScaleKeypress(event, 'height')">
+                            </div>
+                            <button onclick="scaleObject('height', 10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                        </div>
                     </div>
                     
-                    <!-- Разделитель -->
-                    <div style="width: 1px; height: 28px; background: rgba(255,255,255,0.15);"></div>
-                    
-                    <!-- Высота -->
-                    <div style="display: flex; align-items: center; gap: 3px; flex: 1;">
-                        <button onclick="scaleObject('height', -10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
-                        <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;">
-                            <div style="font-size: 8px; color: rgba(255,255,255,0.4); line-height: 1; margin-bottom: 2px; letter-spacing: 0.5px;">В</div>
-                            <input type="number" id="scale-height" value="0" step="1" min="1" style="width: 100%; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;" onchange="onScaleInput('height')" onkeydown="onScaleKeypress(event, 'height')">
-                        </div>
-                        <button onclick="scaleObject('height', 10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                    <!-- Правая колонка: кнопки lock и reset -->
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <!-- Замочек -->
+                        <button id="lock-proportions" onclick="toggleProportions()" style="width: 32px; height: 32px; padding: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;" title="Пропорции">
+                            <svg id="lock-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5">
+                                <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
+                                <path id="lock-shackle" d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Кнопка сброса масштаба -->
+                        <button onclick="resetScale()" style="width: 32px; height: 32px; padding: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;" title="Сбросить масштаб">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                <path d="M3 3v5h5"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1743,16 +1855,84 @@ const PRICES_DATA = {
             <input type="checkbox" id="option-contour" style="display: none;">
             <input type="checkbox" id="option-spacers" style="display: none;">
 
+            <!-- БОРТ -->
+            <div class="section-title section-toggle collapsed" data-section="side-content" onclick="toggleSection('side-content')">
+                Борт
+                <span class="section-arrow">▼</span>
+            </div>
+            <div id="side-content" class="section-content collapsed">
+            <div id="side-section">
+                <div class="field-group">
+                    <label class="field-label">Борт</label>
+                    <select id="side-material-type" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff;">
+                        <optgroup label="ПВХ профиль">
+                            <option value="pvc-3">ПВХ 3мм</option>
+                            <option value="pvc-4" selected>ПВХ 4мм</option>
+                            <option value="pvc-6">ПВХ 6мм</option>
+                            <option value="pvc-8">ПВХ 8мм</option>
+                        </optgroup>
+                        <optgroup label="Алюминиевый профиль">
+                            <option value="aluminum-4">Алюминий 40мм</option>
+                            <option value="aluminum-6">Алюминий 60мм</option>
+                            <option value="aluminum-8">Алюминий 80мм</option>
+                            <option value="aluminum-10">Алюминий 100мм</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Цвет борта</label>
+                    <!-- Кастомный dropdown с цветными квадратиками -->
+                    <div class="custom-select" id="side-color-custom">
+                        <div class="custom-select-trigger">010 - Белый</div>
+                        <div class="custom-options">
+                            <div class="custom-optgroup">
+                                <div class="custom-optgroup-label">Oracal 641</div>
+                                <div class="custom-option" data-value="#FFFFFF" data-color="#FFFFFF"><span class="color-square" style="background: #FFFFFF; border: 1px solid #555;"></span>010 - Белый</div>
+                                <div class="custom-option" data-value="#FFD700" data-color="#FFD700"><span class="color-square" style="background: #FFD700;"></span>020 - Золотой желтый</div>
+                                <div class="custom-option" data-value="#FFD100" data-color="#FFD100"><span class="color-square" style="background: #FFD100;"></span>021 - Желтый</div>
+                                <div class="custom-option" data-value="#FF6B00" data-color="#FF6B00"><span class="color-square" style="background: #FF6B00;"></span>034 - Оранжевый</div>
+                                <div class="custom-option" data-value="#E3000F" data-color="#E3000F"><span class="color-square" style="background: #E3000F;"></span>031 - Красный</div>
+                                <div class="custom-option" data-value="#DC143C" data-color="#DC143C"><span class="color-square" style="background: #DC143C;"></span>032 - Темно-красный</div>
+                                <div class="custom-option" data-value="#800020" data-color="#800020"><span class="color-square" style="background: #800020;"></span>338 - Бордовый</div>
+                                <div class="custom-option" data-value="#FF1493" data-color="#FF1493"><span class="color-square" style="background: #FF1493;"></span>043 - Розовый</div>
+                                <div class="custom-option" data-value="#8B4513" data-color="#8B4513"><span class="color-square" style="background: #8B4513;"></span>080 - Коричневый</div>
+                                <div class="custom-option" data-value="#4B0082" data-color="#4B0082"><span class="color-square" style="background: #4B0082;"></span>055 - Фиолетовый</div>
+                                <div class="custom-option" data-value="#003893" data-color="#003893"><span class="color-square" style="background: #003893;"></span>052 - Синий</div>
+                                <div class="custom-option" data-value="#00BFFF" data-color="#00BFFF"><span class="color-square" style="background: #00BFFF;"></span>053 - Голубой</div>
+                                <div class="custom-option" data-value="#32CD32" data-color="#32CD32"><span class="color-square" style="background: #32CD32;"></span>060 - Светло-зеленый</div>
+                                <div class="custom-option" data-value="#006400" data-color="#006400"><span class="color-square" style="background: #006400;"></span>061 - Темно-зеленый</div>
+                                <div class="custom-option" data-value="#9ACD32" data-color="#9ACD32"><span class="color-square" style="background: #9ACD32;"></span>063 - Зеленое яблоко</div>
+                                <div class="custom-option" data-value="#000000" data-color="#000000"><span class="color-square" style="background: #000000;"></span>070 - Черный</div>
+                                <div class="custom-option" data-value="#808080" data-color="#808080"><span class="color-square" style="background: #808080;"></span>071 - Серый</div>
+                                <div class="custom-option" data-value="#C0C0C0" data-color="#C0C0C0"><span class="color-square" style="background: #C0C0C0;"></span>090 - Светло-серый</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                        <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">толщина борта</label>
+                        <div style="display: flex; gap: 3px; align-items: center; width: 100%;">
+                            <button onclick="changeBortHeight(-5)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="bort-height-display" value="60" style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                            <button onclick="changeBortHeight(5)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="bort-height" value="60">
+                </div>
+            </div>
+            </div><!-- /side-content -->
+
             <!-- ЛИЦЕВАЯ ПАНЕЛЬ -->
             <div class="section-title section-toggle collapsed" data-section="face-content" onclick="toggleSection('face-content')">
-                Лицевая часть
+                Лицо
                 <span class="section-arrow">▼</span>
             </div>
             <div id="face-content" class="section-content collapsed">
             <div id="face-section">
                 <div class="field-group">
-                    <label class="field-label">Лицо</label>
-                    <select id="face-material-type">
+                    <label class="field-label">Материал</label>
+                    <select id="face-material-type" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff;">
                         <option value="acrylic-3-milk">Акрил молочный 3мм</option>
                         <option value="acrylic-3-red">Акрил красный 3мм</option>
                         <option value="acrylic-3-yellow">Акрил жёлтый 3мм</option>
@@ -1770,7 +1950,7 @@ const PRICES_DATA = {
                 <!-- Тип LED диодов (показывается только при включённой подсветке) -->
                 <div class="field-group" id="led-type-group" style="display: none;">
                     <label class="field-label">Тип LED диодов</label>
-                    <select id="led-type-select" onchange="window.changeLedType(this.value)">
+                    <select id="led-type-select" onchange="window.changeLedType(this.value)" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff;">
                         <option value="led-0.7w">3smd 0.7Вт (15₽/шт)</option>
                         <option value="led-1.0w">3smd 1.0Вт (18₽/шт)</option>
                         <option value="led-1.2w" selected>3smd 1.2Вт (20₽/шт)</option>
@@ -1781,7 +1961,7 @@ const PRICES_DATA = {
                     <label class="field-label" id="color-label">Цвет (пленка Oracal 641)</label>
                     <!-- Кастомный dropdown с цветными квадратиками -->
                     <div class="custom-select" id="face-color-custom">
-                        <div class="custom-select-trigger">Оригинал из SVG</div>
+                        <div class="custom-select-trigger">Выберите</div>
                         <div class="custom-options">
                             <div class="custom-option" data-value="original">Оригинал из SVG</div>
                             <!-- Oracal 641 серия (для ПВХ/Композит) -->
@@ -1864,30 +2044,22 @@ const PRICES_DATA = {
             <div class="options-grid">
                 <div class="field-group">
                     <label class="field-label">Тип каркаса</label>
-                    <select id="frame-type">
+                    <select id="frame-type" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff;">
                         <option value="none">Без каркаса</option>
                         <optgroup label="Стальные профильные трубы (6м)">
-                            <option value="steel-15x15">Проф труба 15×15мм (78₽/м.п. с покраской)</option>
-                            <option value="steel-20x20">Проф труба 20×20мм (96₽/м.п. с покраской)</option>
-                            <option value="steel-25x25">Проф труба 25×25мм (115₽/м.п. с покраской)</option>
-                            <option value="steel-30x30">Проф труба 30×30мм (133₽/м.п. с покраской)</option>
-                            <option value="steel-40x20">Проф труба 40×20мм (177₽/м.п. с покраской)</option>
+                            <option value="steel-15x15">Проф труба 15×15мм (78₽/м.п.)</option>
+                            <option value="steel-20x20">Проф труба 20×20мм (96₽/м.п.)</option>
+                            <option value="steel-25x25">Проф труба 25×25мм (115₽/м.п.)</option>
+                            <option value="steel-30x30">Проф труба 30×30мм (133₽/м.п.)</option>
+                            <option value="steel-40x20">Проф труба 40×20мм (177₽/м.п.)</option>
                         </optgroup>
                         <optgroup label="Алюминиевые профили">
-                            <option value="alu-15x15-2m">Алюминий 15×15мм - 2м (210₽/м.п. с покраской)</option>
-                            <option value="alu-15x15-3m">Алюминий 15×15мм - 3м (192₽/м.п. с покраской)</option>
-                            <option value="alu-20x20-2m">Алюминий 20×20мм - 2м (318₽/м.п. с покраской)</option>
-                            <option value="alu-20x20-3m">Алюминий 20×20мм - 3м (248₽/м.п. с покраской)</option>
+                            <option value="alu-15x15-2m">Алюминий 15×15мм - 2м (210₽/м.п.)</option>
+                            <option value="alu-15x15-3m">Алюминий 15×15мм - 3м (192₽/м.п.)</option>
+                            <option value="alu-20x20-2m">Алюминий 20×20мм - 2м (318₽/м.п.)</option>
+                            <option value="alu-20x20-3m">Алюминий 20×20мм - 3м (248₽/м.п.)</option>
                         </optgroup>
                     </select>
-                </div>
-                
-                <!-- Опция покраски каркаса -->
-                <div class="field-group" id="frame-painting-group" style="display: none;">
-                    <label class="field-label">
-                        <input type="checkbox" id="frame-has-painting" onchange="window.toggleFramePainting(this.checked)">
-                        Покраска профиля (400₽/баллон на 6м)
-                    </label>
                 </div>
                 
                 <!-- Цвет каркаса (Oracal 641) -->
@@ -1917,58 +2089,49 @@ const PRICES_DATA = {
                 
                 <!-- Управление профилями в 3D -->
                 <div class="field-group" id="frame-3d-group" style="display: none;">
-                    <button onclick="addFrameProfile()" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 8px;">
+                    <button onclick="addFrameProfile()" class="btn-add" style="margin-bottom: 8px;">
                         ➕ Добавить в 3D сцену
                     </button>
                     
-                    <div id="profiles-3d-list" style="max-height: 150px; overflow-y: auto; background: #222; border-radius: 4px; padding: 5px;">
+                    <div id="profiles-3d-list" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 5px;">
                         <div style="opacity: 0.5; font-size: 11px; padding: 8px; text-align: center;">Профили не добавлены</div>
                     </div>
                     
                     <!-- Управление активным профилем -->
                     <div id="profile-controls" style="display: none; margin-top: 8px; padding: 8px; background: #2a2a2a; border-radius: 4px;">
-                        <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Длина профиля (мм):</label>
-                        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
-                            <button onclick="changeProfileLength(-10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">−</button>
-                            <input type="number" id="profile-length-input" min="10" max="10000" step="10" 
-                                   oninput="updateProfileLength(this.value)" 
-                                   style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                            <button onclick="changeProfileLength(10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">+</button>
-                        </div>
-                        
-                        <!-- Кнопки перемещения профиля -->
-                        <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Перемещение:</label>
-                        <div style="display: flex; gap: 5px; margin-bottom: 8px; justify-content: center;">
-                            <div style="display: flex; flex-direction: column; gap: 3px;">
-                                <button onmousedown="startProfileMove('up')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="padding: 8px 14px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">↑</button>
-                                <div style="display: flex; gap: 3px;">
-                                    <button onmousedown="startProfileMove('left')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">←</button>
-                                    <button onmousedown="startProfileMove('down')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="padding: 8px 14px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">↓</button>
-                                    <button onmousedown="startProfileMove('right')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">→</button>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 3px;">
-                                <button onmousedown="startProfileMove('forward')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="padding: 8px 14px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">⇦</button>
-                                <button onmousedown="startProfileMove('backward')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="padding: 8px 14px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">⇨</button>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">длина (мм)</label>
+                            <div style="display: flex; align-items: center; gap: 3px; width: 100%;">
+                                <button onclick="changeProfileLength(-10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                                <input type="number" id="profile-length-input" min="10" max="10000" step="10" 
+                                       oninput="updateProfileLength(this.value)" 
+                                       style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                <button onclick="changeProfileLength(10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
                             </div>
                         </div>
                         
                         <!-- Кнопки поворота профиля -->
-                        <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Поворот (градусы):</label>
-                        <div style="display: flex; gap: 5px; margin-bottom: 8px; align-items: center;">
-                            <button onmousedown="startProfileMove('rotateLeft')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s; line-height: 1;">↺</button>
-                            <input type="number" id="profile-rotation-input" min="-360" max="360" step="1" 
-                                   oninput="updateProfileRotation(this.value)" 
-                                   style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                            <button onmousedown="startProfileMove('rotateRight')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s; line-height: 1;">↻</button>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">поворот (°)</label>
+                            <div style="display: flex; gap: 3px; align-items: center; width: 100%;">
+                                <button onmousedown="startProfileMove('rotateLeft')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" class="btn-nav" style="width: 24px; height: 32px; font-size: 16px; padding: 0; line-height: 1;">↺</button>
+                                <input type="number" id="profile-rotation-input" min="-360" max="360" step="1" 
+                                       oninput="updateProfileRotation(this.value)" 
+                                       style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                <button onmousedown="startProfileMove('rotateRight')" onmouseup="stopProfileMove()" onmouseleave="stopProfileMove()" class="btn-nav" style="width: 24px; height: 32px; font-size: 16px; padding: 0; line-height: 1;">↻</button>
+                            </div>
                         </div>
                         
                         <div style="display: flex; gap: 5px;">
-                            <button onclick="duplicateProfile()" style="flex: 1; padding: 5px; background: #2196F3; color: white; border: none; border-radius: 3px; font-size: 11px;">
-                                📋 Копировать
+                            <button onclick="duplicateProfile()" style="flex: 1; padding: 6px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                Копировать
                             </button>
-                            <button onclick="deleteActiveProfile()" style="flex: 1; padding: 5px; background: #f44336; color: white; border: none; border-radius: 3px; font-size: 11px;">
-                                🗑️ Удалить
+                            <button onclick="deleteActiveProfile()" style="flex: 1; padding: 6px; background: rgba(244,67,54,0.2); color: white; border: 1px solid rgba(244,67,54,0.4); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                ✕ Удалить
                             </button>
                         </div>
                     </div>
@@ -1986,7 +2149,7 @@ const PRICES_DATA = {
             <div class="options-grid">
                 <div class="field-group">
                     <label class="field-label">Материал основы</label>
-                    <select id="base-material-type">
+                    <select id="base-material-type" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff;">
                         <option value="none">Без основы</option>
                         <optgroup label="Алюмокомпозит">
                             <option value="composite-3-1220">Алюмокомпозит 3мм (2000₽/м²) — 1220×4000мм</option>
@@ -2005,30 +2168,36 @@ const PRICES_DATA = {
                     </select>
                 </div>
                 
-                <!-- Размеры основы -->
-                <div class="field-group" id="base-size-group" style="display: none;">
-                    <label class="field-label">Ширина основы (мм):</label>
-                    <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
-                        <button onclick="changeBaseWidth(-10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">−</button>
-                        <input type="number" id="base-width" min="100" max="10000" step="10" value="1000" 
-                               oninput="updateBaseSizeInputs()" 
-                               style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                        <button onclick="changeBaseWidth(10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">+</button>
+                <!-- Размеры и цвет основы в две колонки -->
+                <div style="display: flex; gap: 10px;" id="base-size-color-wrapper">
+                    <!-- Размеры основы -->
+                    <div class="field-group" id="base-size-group" style="display: none; flex: 1; margin: 0;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">ширина</label>
+                            <div style="display: flex; align-items: center; gap: 3px; width: 100%;">
+                                <button onclick="changeBaseWidth(-10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                                <input type="number" id="base-width" min="100" max="10000" step="10" value="1000" 
+                                       oninput="updateBaseSizeInputs()" 
+                                       style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                <button onclick="changeBaseWidth(10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                            <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">высота</label>
+                            <div style="display: flex; align-items: center; gap: 3px; width: 100%;">
+                                <button onclick="changeBaseHeight(-10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                                <input type="number" id="base-height" min="100" max="10000" step="10" value="1000" 
+                                       oninput="updateBaseSizeInputs()" 
+                                       style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                <button onclick="changeBaseHeight(10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                            </div>
+                        </div>
                     </div>
                     
-                    <label class="field-label">Высота основы (мм):</label>
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <button onclick="changeBaseHeight(-10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">−</button>
-                        <input type="number" id="base-height" min="100" max="10000" step="10" value="1000" 
-                               oninput="updateBaseSizeInputs()" 
-                               style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                        <button onclick="changeBaseHeight(10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">+</button>
-                    </div>
-                </div>
-                
-                <!-- Цвет основы (Oracal 641) -->
-                <div class="field-group" id="base-color-group" style="display: none;">
-                    <label class="field-label">Цвет основы (Oracal 641)</label>
+                    <!-- Цвет основы (Oracal 641) -->
+                    <div class="field-group" id="base-color-group" style="display: none; flex: 1; margin: 0;">
+                    <label class="field-label">Цвет (Oracal 641)</label>
                     <div style="display: flex; gap: 3px; flex-wrap: wrap;">
                         <button onclick="setBaseColor('#FFFFFF')" title="010 - Белый" style="width: 20px; height: 20px; background: #FFFFFF; border: 1px solid rgba(255,255,255,0.5); border-radius: 3px; cursor: pointer;"></button>
                         <button onclick="setBaseColor('#FFD700')" title="020 - Золотой желтый" style="width: 20px; height: 20px; background: #FFD700; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; cursor: pointer;"></button>
@@ -2049,19 +2218,20 @@ const PRICES_DATA = {
                         <button onclick="setBaseColor('#808080')" title="071 - Серый" style="width: 20px; height: 20px; background: #808080; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; cursor: pointer;"></button>
                         <button onclick="setBaseColor('#C0C0C0')" title="090 - Светло-серый" style="width: 20px; height: 20px; background: #C0C0C0; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; cursor: pointer;"></button>
                     </div>
+                    </div>
                 </div>
                 
                 <!-- Каркас для основы -->
                 <div class="field-group" id="base-frame-group" style="display: none;">
-                    <label class="field-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <label class="field-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,193,7,0.08); padding: 8px; border-radius: 4px; border: 1px solid rgba(255,193,7,0.2);">
                         <input type="checkbox" id="base-frame-checkbox" onchange="toggleBaseFrame()" style="cursor: pointer;">
-                        <span>Каркас для основы</span>
+                        <span style="font-size: 12px; font-weight: 600; color: #ffd54f;">Каркас для основы</span>
                     </label>
                     
                     <div id="base-frame-options" style="display: none; margin-top: 10px;">
                         <!-- Профиль каркаса -->
                         <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Профиль:</label>
-                        <select id="base-frame-profile" onchange="updateBaseFrameProfile()" style="width: 100%; padding: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; margin-bottom: 10px;">
+                        <select id="base-frame-profile" onchange="updateBaseFrameProfile()" style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff; border-radius: 4px; margin-bottom: 10px;">
                             <option value="15x15">15×15 мм</option>
                             <option value="20x20" selected>20×20 мм</option>
                             <option value="30x30">30×30 мм</option>
@@ -2095,44 +2265,50 @@ const PRICES_DATA = {
                 
                 <!-- Управление основами в 3D -->
                 <div class="field-group" id="base-3d-group" style="display: none;">
-                    <button onclick="addBase()" style="width: 100%; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 8px;">
+                    <button onclick="addBase()" class="btn-add" style="margin-bottom: 8px;">
                         ➕ Добавить в 3D сцену
                     </button>
                     
-                    <div id="bases-3d-list" style="max-height: 150px; overflow-y: auto; background: #222; border-radius: 4px; padding: 5px;">
+                    <div id="bases-3d-list" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 5px;">
                         <div style="opacity: 0.5; font-size: 11px; padding: 8px; text-align: center;">Основы не добавлены</div>
                     </div>
                     
                     <!-- Управление активной основой -->
                     <div id="base-controls" style="display: none; margin-top: 8px; padding: 8px; background: #2a2a2a; border-radius: 4px;">
                         <!-- Размеры активной основы -->
-                        <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Ширина (мм):</label>
-                        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
-                            <button onclick="changeActiveBaseWidth(-10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">−</button>
-                            <input type="number" id="active-base-width-input" min="100" max="10000" step="10" 
-                                   oninput="updateActiveBaseWidth(this.value)" 
-                                   style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                            <button onclick="changeActiveBaseWidth(10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">+</button>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">ширина (мм)</label>
+                            <div style="display: flex; align-items: center; gap: 3px; width: 100%;">
+                                <button onclick="changeActiveBaseWidth(-10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                                <input type="number" id="active-base-width-input" min="100" max="10000" step="10" 
+                                       oninput="updateActiveBaseWidth(this.value)" 
+                                       style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                <button onclick="changeActiveBaseWidth(10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                            </div>
                         </div>
                         
-                        <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Высота (мм):</label>
-                        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
-                            <button onclick="changeActiveBaseHeight(-10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">−</button>
-                            <input type="number" id="active-base-height-input" min="100" max="10000" step="10" 
-                                   oninput="updateActiveBaseHeight(this.value)" 
-                                   style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                            <button onclick="changeActiveBaseHeight(10)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">+</button>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">высота (мм)</label>
+                            <div style="display: flex; align-items: center; gap: 3px; width: 100%;">
+                                <button onclick="changeActiveBaseHeight(-10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                                <input type="number" id="active-base-height-input" min="100" max="10000" step="10" 
+                                       oninput="updateActiveBaseHeight(this.value)" 
+                                       style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                <button onclick="changeActiveBaseHeight(10)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                            </div>
                         </div>
                         
                         <!-- Загиб краёв (только для композита) -->
                         <div id="active-base-bend-controls" style="display: none;">
-                            <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Загиб краёв (мм):</label>
-                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 8px;">
-                                <button onclick="changeActiveBaseBend(-5)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">−</button>
-                                <input type="number" id="active-base-bend-input" min="0" max="200" step="5" value="0" 
-                                       oninput="updateActiveBaseBend(this.value)" 
-                                       style="flex: 1; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; text-align: center;">
-                                <button onclick="changeActiveBaseBend(5)" style="width: 32px; height: 32px; padding: 0; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; line-height: 1;">+</button>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 8px;">
+                                <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2px;">загиб краёв (мм)</label>
+                                <div style="display: flex; align-items: center; gap: 3px; width: 100%;">
+                                    <button onclick="changeActiveBaseBend(-5)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">−</button>
+                                    <input type="number" id="active-base-bend-input" min="0" max="200" step="5" value="0" 
+                                           oninput="updateActiveBaseBend(this.value)" 
+                                           style="flex: 1; height: 22px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: white; text-align: center; font-size: 11px; padding: 0 4px;">
+                                    <button onclick="changeActiveBaseBend(5)" class="btn-nav" style="width: 24px; height: 32px; font-size: 18px; padding: 0; line-height: 1;">+</button>
+                                </div>
                             </div>
                             <div id="active-base-bend-warning" style="font-size: 10px; color: #ff9800; margin-top: 4px; display: none;">⚠️ Не вмещается в лист!</div>
                             <div id="active-base-bend-info" style="font-size: 10px; opacity: 0.6; margin-bottom: 8px;">Полный размер: <span id="active-base-full-size">—</span></div>
@@ -2140,37 +2316,31 @@ const PRICES_DATA = {
                         
                         <!-- Кнопки перемещения основы -->
                         <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 5px;">Перемещение:</label>
-                        <div style="display: flex; gap: 5px; margin-bottom: 8px; justify-content: center;">
-                            <div style="display: flex; flex-direction: column; gap: 3px;">
-                                <button onmousedown="startBaseMove('up')" onmouseup="stopBaseMove()" onmouseleave="stopBaseMove()" style="padding: 8px 14px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">↑</button>
-                                <div style="display: flex; gap: 3px;">
-                                    <button onmousedown="startBaseMove('left')" onmouseup="stopBaseMove()" onmouseleave="stopBaseMove()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">←</button>
-                                    <button onmousedown="startBaseMove('down')" onmouseup="stopBaseMove()" onmouseleave="stopBaseMove()" style="padding: 8px 14px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">↓</button>
-                                    <button onmousedown="startBaseMove('right')" onmouseup="stopBaseMove()" onmouseleave="stopBaseMove()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.2s;">→</button>
-                                </div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <div class="compact-nav" style="flex: 1;">
                             </div>
                         </div>
                         
                         <!-- Кнопки действий -->
                         <div style="display: flex; gap: 5px;">
-                            <button onclick="copyActiveBase()" style="flex: 1; padding: 8px; background: rgba(76, 175, 80, 0.5); color: white; border: 1px solid rgba(76, 175, 80, 0.8); border-radius: 4px; cursor: pointer;">📋 Копировать</button>
-                            <button onclick="deleteActiveBase()" style="flex: 1; padding: 8px; background: rgba(244, 67, 54, 0.5); color: white; border: 1px solid rgba(244, 67, 54, 0.8); border-radius: 4px; cursor: pointer;">🗑️ Удалить</button>
+                            <button onclick="copyActiveBase()" style="flex: 1; padding: 6px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                Копировать
+                            </button>
+                            <button onclick="deleteActiveBase()" style="flex: 1; padding: 6px; background: rgba(244,67,54,0.2); color: white; border: 1px solid rgba(244,67,54,0.4); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                ✕ Удалить
+                            </button>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Опция подворота для композита -->
-                <div class="field-group" id="base-folding-group" style="display: none;">
-                    <label class="field-label">
-                        <input type="checkbox" id="base-has-folding" onchange="window.toggleBaseOption('folding', this.checked)">
-                        С подворотом краёв
-                    </label>
                 </div>
                 
                 <!-- Опция уголка для ПВХ и поликарбоната -->
                 <div class="field-group" id="base-corner-group" style="display: none;">
                     <label class="field-label">Обрамление уголком</label>
-                    <select id="base-corner-type" onchange="window.updateBaseCorner(this.value)">
+                    <select id="base-corner-type" onchange="window.updateBaseCorner(this.value)" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; font-size: 13px; font-weight: 500; color: #fff;">
                         <option value="none">Без уголка</option>
                         <option value="corner-plastic">Пластиковый 30×30мм (100₽/м.п.)</option>
                         <option value="corner-metal">Жестяной 30×30мм (300₽/м.п.)</option>
@@ -2179,72 +2349,6 @@ const PRICES_DATA = {
             </div>
             </div><!-- /base-content -->
 
-            <!-- БОКОВОЙ ПРОФИЛЬ -->
-            <div class="section-title section-toggle collapsed" data-section="side-content" onclick="toggleSection('side-content')">
-                Боковой профиль
-                <span class="section-arrow">▼</span>
-            </div>
-            <div id="side-content" class="section-content collapsed">
-            <div id="side-section">
-                <div class="field-group">
-                    <label class="field-label">Борт</label>
-                    <select id="side-material-type">
-                        <optgroup label="ПВХ профиль">
-                            <option value="pvc-3">ПВХ 3мм</option>
-                            <option value="pvc-4" selected>ПВХ 4мм</option>
-                            <option value="pvc-6">ПВХ 6мм</option>
-                            <option value="pvc-8">ПВХ 8мм</option>
-                        </optgroup>
-                        <optgroup label="Алюминиевый профиль">
-                            <option value="aluminum-4">Алюминий 40мм</option>
-                            <option value="aluminum-6">Алюминий 60мм</option>
-                            <option value="aluminum-8">Алюминий 80мм</option>
-                            <option value="aluminum-10">Алюминий 100мм</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Цвет борта</label>
-                    <!-- Кастомный dropdown с цветными квадратиками -->
-                    <div class="custom-select" id="side-color-custom">
-                        <div class="custom-select-trigger">010 - Белый</div>
-                        <div class="custom-options">
-                            <div class="custom-optgroup">
-                                <div class="custom-optgroup-label">Oracal 641</div>
-                                <div class="custom-option" data-value="#FFFFFF" data-color="#FFFFFF"><span class="color-square" style="background: #FFFFFF; border: 1px solid #555;"></span>010 - Белый</div>
-                                <div class="custom-option" data-value="#FFD700" data-color="#FFD700"><span class="color-square" style="background: #FFD700;"></span>020 - Золотой желтый</div>
-                                <div class="custom-option" data-value="#FFD100" data-color="#FFD100"><span class="color-square" style="background: #FFD100;"></span>021 - Желтый</div>
-                                <div class="custom-option" data-value="#FF6B00" data-color="#FF6B00"><span class="color-square" style="background: #FF6B00;"></span>034 - Оранжевый</div>
-                                <div class="custom-option" data-value="#E3000F" data-color="#E3000F"><span class="color-square" style="background: #E3000F;"></span>031 - Красный</div>
-                                <div class="custom-option" data-value="#DC143C" data-color="#DC143C"><span class="color-square" style="background: #DC143C;"></span>032 - Темно-красный</div>
-                                <div class="custom-option" data-value="#800020" data-color="#800020"><span class="color-square" style="background: #800020;"></span>338 - Бордовый</div>
-                                <div class="custom-option" data-value="#FF1493" data-color="#FF1493"><span class="color-square" style="background: #FF1493;"></span>043 - Розовый</div>
-                                <div class="custom-option" data-value="#8B4513" data-color="#8B4513"><span class="color-square" style="background: #8B4513;"></span>080 - Коричневый</div>
-                                <div class="custom-option" data-value="#4B0082" data-color="#4B0082"><span class="color-square" style="background: #4B0082;"></span>055 - Фиолетовый</div>
-                                <div class="custom-option" data-value="#003893" data-color="#003893"><span class="color-square" style="background: #003893;"></span>052 - Синий</div>
-                                <div class="custom-option" data-value="#00BFFF" data-color="#00BFFF"><span class="color-square" style="background: #00BFFF;"></span>053 - Голубой</div>
-                                <div class="custom-option" data-value="#32CD32" data-color="#32CD32"><span class="color-square" style="background: #32CD32;"></span>060 - Светло-зеленый</div>
-                                <div class="custom-option" data-value="#006400" data-color="#006400"><span class="color-square" style="background: #006400;"></span>061 - Темно-зеленый</div>
-                                <div class="custom-option" data-value="#9ACD32" data-color="#9ACD32"><span class="color-square" style="background: #9ACD32;"></span>063 - Зеленое яблоко</div>
-                                <div class="custom-option" data-value="#000000" data-color="#000000"><span class="color-square" style="background: #000000;"></span>070 - Черный</div>
-                                <div class="custom-option" data-value="#808080" data-color="#808080"><span class="color-square" style="background: #808080;"></span>071 - Серый</div>
-                                <div class="custom-option" data-value="#C0C0C0" data-color="#C0C0C0"><span class="color-square" style="background: #C0C0C0;"></span>090 - Светло-серый</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Толщина борта</label>
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                        <button onclick="changeBortHeight(-5)" class="value-btn">−</button>
-                        <input type="number" id="bort-height-display" value="60" style="flex: 2; text-align: center; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px; font-weight: 600; color: var(--text-primary);">
-                        <button onclick="changeBortHeight(5)" class="value-btn">+</button>
-                    </div>
-                    <input type="hidden" id="bort-height" value="60">
-                </div>
-            </div>
-            </div><!-- /side-content -->
-            
             <!-- СТЕНА (секция удалена - цвет фона теперь в левой панели) -->
             
             <!-- КАЛЬКУЛЯТОР СТОИМОСТИ (СВОРАЧИВАЕМЫЙ) -->
@@ -2332,14 +2436,12 @@ const PRICES_DATA = {
             svgRealSize: { width: 0, height: 0 }, // Реальные размеры SVG в мм
             svgScale: 1, // Масштаб для конвертации единиц SVG в мм
             frameType: 'none', // Тип каркаса
-            framePainting: false, // Покраска каркаса
             frameColor: '#FFFFFF', // Цвет каркаса (по умолчанию белый)
             baseMaterial: 'none', // Материал основы
             baseColor: '#FFFFFF', // Цвет основы (по умолчанию белый)
             baseWidth: 1000, // Ширина основы в мм
             baseHeight: 1000, // Высота основы в мм
             baseBend: 0, // Размер загиба для композита в мм
-            baseFolding: false, // Подворот композита
             baseCorner: 'none', // Обрамление уголком
             hasBaseFrame: false, // Каркас для основы
             baseFrameProfile: '20x20', // Профиль каркаса (15x15, 20x20, 30x30, 40x20)
@@ -2582,11 +2684,14 @@ const PRICES_DATA = {
                 
                 html += `
                     <div onclick="selectProfile(${idx})" 
-                         style="padding: 6px; margin: 3px 0; background: ${isActive ? '#444' : '#2a2a2a'}; 
-                                border-left: 3px solid ${isActive ? '#4CAF50' : 'transparent'}; 
-                                cursor: pointer; font-size: 11px; border-radius: 2px;">
-                        <div style="font-weight: bold;">${prof.name}</div>
-                        <div style="opacity: 0.7;">Длина: ${lengthM}м (${prof.length}мм)</div>
+                         style="padding: 8px; margin: 4px 0; 
+                                background: ${isActive ? 'rgba(255,193,7,0.12)' : 'rgba(255,255,255,0.03)'}; 
+                                border: 1px solid ${isActive ? 'rgba(255,193,7,0.4)' : 'rgba(255,255,255,0.1)'}; 
+                                border-radius: 4px;
+                                cursor: pointer; font-size: 11px; 
+                                transition: all 0.2s;">
+                        <div style="font-weight: 500; color: ${isActive ? '#ffd54f' : '#fff'};">${prof.name}</div>
+                        <div style="opacity: 0.7; margin-top: 2px;">Длина: ${lengthM}м (${prof.length}мм)</div>
                     </div>
                 `;
             });
@@ -2596,6 +2701,42 @@ const PRICES_DATA = {
         
         // Выбор профиля
         window.selectProfile = function(index) {
+            // СБРАСЫВАЕМ ВСЕ ДРУГИЕ АКТИВНЫЕ ОБЪЕКТЫ
+            // Снимаем выделение с SVG
+            if (activeSvgHelper) {
+                scene.remove(activeSvgHelper);
+                activeSvgHelper = null;
+            }
+            if (activeSvgIndex !== null) {
+                activeSvgIndex = null;
+                updateSVGList();
+            }
+            
+            // Снимаем выделение с основы
+            if (activeBaseIndex !== null && bases[activeBaseIndex]) {
+                const prevBaseMesh = bases[activeBaseIndex].mesh;
+                if (prevBaseMesh) {
+                    if (prevBaseMesh.type === 'Group') {
+                        prevBaseMesh.children.forEach(child => {
+                            if (child.children[0]) {
+                                child.children[0].material.opacity = 0.2;
+                                child.children[0].material.color.setHex(0x000000);
+                            }
+                        });
+                    } else if (prevBaseMesh.children[0]) {
+                        prevBaseMesh.children[0].material.opacity = 0.2;
+                        prevBaseMesh.children[0].material.color.setHex(0x000000);
+                    }
+                }
+                activeBaseIndex = null;
+                
+                // Скрываем панель управления основой
+                const baseControls = document.getElementById('base-controls');
+                if (baseControls) {
+                    baseControls.style.display = 'none';
+                }
+            }
+            
             // Снимаем выделение с предыдущего профиля
             if (activeProfileIndex !== null && frameProfiles[activeProfileIndex]) {
                 const prevMesh = frameProfiles[activeProfileIndex].mesh;
@@ -3061,9 +3202,9 @@ const PRICES_DATA = {
                         
                         if (nearest.type === 'svg') {
                             draggedSvgIndex = nearest.index;
-                            activeSvgIndex = draggedSvgIndex;
-                            updateSVGList();
-                            updateCostCalculator();
+                            
+                            // Используем функцию selectSVG для корректного сброса других объектов
+                            selectSVG(draggedSvgIndex);
                             
                             const svgGroup = svgGroups[draggedSvgIndex].group;
                             raycaster.ray.intersectPlane(dragPlane, dragIntersectionPoint);
@@ -3318,6 +3459,14 @@ const PRICES_DATA = {
                 });
             });
             
+            // Инициализация первого цвета по умолчанию (если не "Оригинал из SVG")
+            const firstColorOption = Array.from(options).find(opt => opt.getAttribute('data-color'));
+            if (firstColorOption) {
+                const text = firstColorOption.textContent.trim();
+                // Устанавливаем "Выберите" как дефолт (без квадратика)
+                trigger.textContent = 'Выберите';
+            }
+            
             log(`✅ Кастомный dropdown инициализирован с ${options.length} опциями`, 'success');
         }
         
@@ -3373,6 +3522,27 @@ const PRICES_DATA = {
                 });
             });
             
+            // Инициализация первого цвета (белый) по умолчанию
+            const firstOption = options[0];
+            if (firstOption) {
+                const color = firstOption.getAttribute('data-color');
+                const text = firstOption.textContent.trim();
+                
+                trigger.innerHTML = '';
+                if (color) {
+                    const colorSquare = document.createElement('span');
+                    colorSquare.className = 'color-square';
+                    colorSquare.style.background = color;
+                    if (color === '#FFFFFF') {
+                        colorSquare.style.border = '1px solid #555';
+                    }
+                    trigger.appendChild(colorSquare);
+                }
+                const textNode = document.createTextNode(text);
+                trigger.appendChild(textNode);
+                firstOption.classList.add('selected');
+            }
+            
             log(`✅ Кастомный dropdown "Цвет борта" инициализирован с ${options.length} опциями`, 'success');
         }
         
@@ -3384,7 +3554,7 @@ const PRICES_DATA = {
             const coloredAcrylicGroup = document.getElementById('colored-acrylic-group');
             const colorLabel = document.getElementById('color-label');
             const faceColorSelect = document.getElementById('face-color');
-            const customSelectTrigger = document.querySelector('.custom-select-trigger');
+            const customSelectTrigger = document.querySelector('#face-color-custom .custom-select-trigger');
             
             // Находим родительский div с палитрой цветов
             const colorFieldGroup = colorLabel?.parentElement;
@@ -3416,11 +3586,11 @@ const PRICES_DATA = {
                 log('Доступна: Oracal 641 (несветовая)', 'info');
             }
             
-            // Сбрасываем выбор на "Оригинал из SVG" при смене материала
+            // Сбрасываем выбор на "Выберите" при смене материала
             faceColorSelect.value = 'original';
             state.faceColor = 'original';
             if (customSelectTrigger) {
-                customSelectTrigger.textContent = 'Оригинал из SVG';
+                customSelectTrigger.textContent = 'Выберите';
             }
             
             // Убираем selected класс со всех опций
@@ -3832,7 +4002,7 @@ const PRICES_DATA = {
         }
         
         // === СОЗДАНИЕ КАРКАСА ДЛЯ ОСНОВЫ ===
-        function createBaseFrame(baseWidth, baseHeight, profileSize, color, baseThickness, baseBend) {
+        function createBaseFrame(baseWidth, baseHeight, profileSize, color, baseThickness, baseBend, posX = 0, posY = 0) {
             // Масштаб сцены
             const SCENE_SCALE = 0.1; // 10мм = 1 единица
             
@@ -3965,7 +4135,12 @@ const PRICES_DATA = {
             // Позиционирование каркаса: между стеной и основой
             // Z = -10 + половина глубины профиля
             const frameZ = -10 + (profileDepth * SCENE_SCALE) / 2;
-            group.position.set(0, 0, frameZ);
+            
+            // ИСПРАВЛЕНИЕ БАГА: при загибе основа сдвигается вперёд, каркас должен следовать за ней
+            // Каркас крепится к задней части основы, поэтому учитываем bendOffset
+            const bendOffset = baseBend * SCENE_SCALE;
+            
+            group.position.set(posX, posY, frameZ + bendOffset);
             
             return group;
         }
@@ -4106,7 +4281,7 @@ const PRICES_DATA = {
             // Создаём каркас для основы (если включен)
             let frameMesh = null;
             if (state.hasBaseFrame) {
-                frameMesh = createBaseFrame(state.baseWidth, state.baseHeight, state.baseFrameProfile, state.baseFrameColor, thickness, bend);
+                frameMesh = createBaseFrame(state.baseWidth, state.baseHeight, state.baseFrameProfile, state.baseFrameColor, thickness, bend, 0, 0);
                 scene.add(frameMesh);
             }
             
@@ -4157,11 +4332,12 @@ const PRICES_DATA = {
                 
                 return `
                     <div onclick="selectBase(${index})" 
-                         style="padding: 6px; margin: 3px 0; background: ${isActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255,255,255,0.05)'}; 
-                         border: 1px solid ${isActive ? 'rgba(76, 175, 80, 0.6)' : 'rgba(255,255,255,0.1)'}; 
-                         border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s;">
+                         style="padding: 8px; margin: 4px 0; 
+                                background: ${isActive ? 'rgba(255,193,7,0.12)' : 'rgba(255,255,255,0.03)'}; 
+                                border: 1px solid ${isActive ? 'rgba(255,193,7,0.4)' : 'rgba(255,255,255,0.1)'}; 
+                                border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>📦 Основа #${index + 1}</span>
+                            <span style="font-weight: 500; color: ${isActive ? '#ffd54f' : '#fff'};">📦 Основа #${index + 1}</span>
                             <span style="opacity: 0.7;">${base.width}×${base.height}</span>
                         </div>
                         <div style="opacity: 0.6; font-size: 10px; margin-top: 2px;">${matName}</div>
@@ -4238,6 +4414,33 @@ const PRICES_DATA = {
         // === ВЫБОР ОСНОВЫ ===
         function selectBase(index) {
             if (index < 0 || index >= bases.length) return;
+            
+            // СБРАСЫВАЕМ ВСЕ ДРУГИЕ АКТИВНЫЕ ОБЪЕКТЫ
+            // Снимаем выделение с SVG
+            if (activeSvgHelper) {
+                scene.remove(activeSvgHelper);
+                activeSvgHelper = null;
+            }
+            if (activeSvgIndex !== null) {
+                activeSvgIndex = null;
+                updateSVGList();
+            }
+            
+            // Снимаем выделение с профилей каркаса
+            if (activeProfileIndex !== null && frameProfiles[activeProfileIndex]) {
+                const prevProfMesh = frameProfiles[activeProfileIndex].mesh;
+                if (prevProfMesh && prevProfMesh.children[0]) {
+                    prevProfMesh.children[0].material.opacity = 0.2;
+                    prevProfMesh.children[0].material.color.setHex(0x000000);
+                }
+                activeProfileIndex = null;
+                
+                // Скрываем панель управления профилем
+                const profileControls = document.getElementById('profile-controls');
+                if (profileControls) {
+                    profileControls.style.display = 'none';
+                }
+            }
             
             // Снимаем выделение с предыдущей основы
             if (activeBaseIndex !== null && bases[activeBaseIndex]) {
@@ -4345,6 +4548,13 @@ const PRICES_DATA = {
             newBase.positionX = newBase.mesh.position.x;
             newBase.positionY = newBase.mesh.position.y;
             
+            // Синхронизируем каркас (копируем только X и Y)
+            if (newBase.frameMesh) {
+                newBase.frameMesh.position.x = newBase.mesh.position.x;
+                newBase.frameMesh.position.y = newBase.mesh.position.y;
+                // Z не трогаем - каркас имеет свою глубину с учётом загиба
+            }
+            
             // Восстанавливаем старые настройки
             state.baseWidth = oldWidth;
             state.baseHeight = oldHeight;
@@ -4449,7 +4659,24 @@ const PRICES_DATA = {
                         base.mesh.position.x += step;
                         base.positionX += step;
                         break;
+                    case 'forward':
+                        base.mesh.position.z += step;
+                        if (base.positionZ !== undefined) base.positionZ += step;
+                        break;
+                    case 'backward':
+                        base.mesh.position.z -= step;
+                        if (base.positionZ !== undefined) base.positionZ -= step;
+                        break;
                 }
+                
+                // Синхронизируем позицию каркаса с основой (если есть)
+                // ВАЖНО: копируем только X и Y, Z остаётся своим (каркас СЗАДИ основы)
+                if (base.frameMesh) {
+                    base.frameMesh.position.x = base.mesh.position.x;
+                    base.frameMesh.position.y = base.mesh.position.y;
+                    // Z не трогаем - каркас имеет свою глубину с учётом загиба
+                }
+                
                 updateCostCalculator();
             };
             
@@ -4457,7 +4684,7 @@ const PRICES_DATA = {
             baseMoveInterval = setInterval(moveBase, 50); // Повтор каждые 50мс
         }
         
-        function stopBaseMove() {
+        window.stopBaseMove = function() {
             if (baseMoveInterval) {
                 clearInterval(baseMoveInterval);
                 baseMoveInterval = null;
@@ -4749,7 +4976,9 @@ const PRICES_DATA = {
                     base.frameProfile || '20x20',
                     base.frameColor || '#808080',
                     base.thickness,
-                    base.bend || 0
+                    base.bend || 0,
+                    currentPosition.x,
+                    currentPosition.y
                 );
                 scene.add(newFrameMesh);
                 bases[activeBaseIndex].frameMesh = newFrameMesh;
@@ -5025,14 +5254,6 @@ const PRICES_DATA = {
                     const width = svg.getAttribute('width');
                     const height = svg.getAttribute('height');
                     
-                    const infoEl = document.getElementById('svg-info');
-                    infoEl.innerHTML = `
-                        <div style="color: #4CAF50; font-size: 11px;">✅ SVG загружен: <strong>${file.name}</strong></div>
-                        <div style="font-size: 10px; opacity: 0.7; margin-top: 3px;">
-                            Размер: ${width || 'авто'} × ${height || 'авто'}
-                        </div>
-                    `;
-                    infoEl.style.display = 'block';
                     
                     state.svgLoaded = true;
                     log(`SVG загружен: ${file.name}`, 'success');
@@ -5678,6 +5899,7 @@ const PRICES_DATA = {
                     realWidth: state.svgRealSize.width,
                     realHeight: state.svgRealSize.height,
                     totalElementsHeight: state.svgRealSize.totalElementsHeight, // СУММА высот всех элементов
+                    pathsCount: svgData.paths.length, // Количество букв/paths в SVG
                     currentWidth: state.svgRealSize.width, // Текущая ширина после масштабирования
                     currentHeight: state.svgRealSize.height, // Текущая высота после масштабирования
                     shadowClones: [], // Тени для этого SVG
@@ -5759,7 +5981,49 @@ const PRICES_DATA = {
         window.selectSVG = function(index) {
             if (index < 0 || index >= svgGroups.length) return;
             
-            // Удаляем старую подсветку
+            // СБРАСЫВАЕМ ВСЕ ДРУГИЕ АКТИВНЫЕ ОБЪЕКТЫ
+            // Снимаем выделение с основы
+            if (activeBaseIndex !== null && bases[activeBaseIndex]) {
+                const prevBaseMesh = bases[activeBaseIndex].mesh;
+                if (prevBaseMesh) {
+                    if (prevBaseMesh.type === 'Group') {
+                        prevBaseMesh.children.forEach(child => {
+                            if (child.children[0]) {
+                                child.children[0].material.opacity = 0.2;
+                                child.children[0].material.color.setHex(0x000000);
+                            }
+                        });
+                    } else if (prevBaseMesh.children[0]) {
+                        prevBaseMesh.children[0].material.opacity = 0.2;
+                        prevBaseMesh.children[0].material.color.setHex(0x000000);
+                    }
+                }
+                activeBaseIndex = null;
+                
+                // Скрываем панель управления основой
+                const baseControls = document.getElementById('base-controls');
+                if (baseControls) {
+                    baseControls.style.display = 'none';
+                }
+            }
+            
+            // Снимаем выделение с профилей каркаса
+            if (activeProfileIndex !== null && frameProfiles[activeProfileIndex]) {
+                const prevProfMesh = frameProfiles[activeProfileIndex].mesh;
+                if (prevProfMesh && prevProfMesh.children[0]) {
+                    prevProfMesh.children[0].material.opacity = 0.2;
+                    prevProfMesh.children[0].material.color.setHex(0x000000);
+                }
+                activeProfileIndex = null;
+                
+                // Скрываем панель управления профилем
+                const profileControls = document.getElementById('profile-controls');
+                if (profileControls) {
+                    profileControls.style.display = 'none';
+                }
+            }
+            
+            // Удаляем старую подсветку SVG
             if (activeSvgHelper) {
                 scene.remove(activeSvgHelper);
                 activeSvgHelper = null;
@@ -6048,6 +6312,69 @@ const PRICES_DATA = {
             }
         }
         
+        // === УПРАВЛЕНИЕ ИЗ СЦЕНЫ (ПЛАВАЮЩАЯ ПАНЕЛЬ) ===
+        window.handleSceneControlMouseDown = function(direction) {
+            // Определяем активный объект/профиль/основу
+            if (activeSvgIndex !== null && svgGroups[activeSvgIndex]) {
+                // Управление SVG объектом
+                startContinuousMove(direction);
+            } else if (activeProfileIndex !== null && frameProfiles[activeProfileIndex]) {
+                // Управление профилем каркаса
+                startProfileMove(direction);
+            } else if (activeBaseIndex !== null && bases[activeBaseIndex]) {
+                // Управление основой
+                startBaseMove(direction);
+            }
+        }
+        
+        window.handleSceneControlMouseUp = function() {
+            // Останавливаем все движения
+            stopContinuousMove();
+            stopProfileMove();
+            stopBaseMove();
+        }
+        
+        // === УПРАВЛЕНИЕ С КЛАВИАТУРЫ ===
+        document.addEventListener('keydown', (e) => {
+            // Игнорируем, если фокус на input/textarea
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            
+            let direction = null;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    direction = 'up';
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    direction = 'down';
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    direction = 'left';
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    direction = 'right';
+                    e.preventDefault();
+                    break;
+            }
+            
+            if (direction) {
+                handleSceneControlMouseDown(direction);
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            // Останавливаем движение при отпускании стрелки
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                handleSceneControlMouseUp();
+                e.preventDefault();
+            }
+        });
+        
         // === МАСШТАБИРОВАНИЕ ОБЪЕКТОВ ===
         let proportionalScale = false;
         
@@ -6229,13 +6556,17 @@ const PRICES_DATA = {
         ];
         
         function renderWallColors() {
-            const container = document.getElementById('wall-colors-container');
-            if (!container) return;
+            const row1 = document.getElementById('wall-colors-row-1');
+            const row2 = document.getElementById('wall-colors-row-2');
+            if (!row1 || !row2) return;
             
-            container.innerHTML = '';
+            row1.innerHTML = '';
+            row2.innerHTML = '';
             
-            // Показываем ВСЕ цвета сразу
-            wallColorPalette.forEach(colorData => {
+            // Делим палитру пополам
+            const halfLength = Math.ceil(wallColorPalette.length / 2);
+            
+            wallColorPalette.forEach((colorData, index) => {
                 const btn = document.createElement('button');
                 btn.onclick = () => setWallColor(colorData.color);
                 btn.title = colorData.name;
@@ -6252,7 +6583,12 @@ const PRICES_DATA = {
                 btn.onmouseover = () => btn.style.transform = 'scale(1.2)';
                 btn.onmouseout = () => btn.style.transform = 'scale(1)';
                 
-                container.appendChild(btn);
+                // Добавляем в первый или второй ряд
+                if (index < halfLength) {
+                    row1.appendChild(btn);
+                } else {
+                    row2.appendChild(btn);
+                }
             });
         }
         
@@ -6302,7 +6638,7 @@ const PRICES_DATA = {
             const sideContent = document.getElementById('side-content');
             if (sideToggle && sideContent) {
                 if (isVolumetric) {
-                    // Показываем секцию "Боковой профиль"
+                    // Показываем секцию "Борт"
                     sideToggle.style.display = 'block';
                     sideContent.style.display = 'block';
                     // Раскрываем если свёрнута
@@ -6329,7 +6665,7 @@ const PRICES_DATA = {
                         sideMaterialSelect.dispatchEvent(new Event('change'));
                     }
                 } else {
-                    // Скрываем всю секцию "Боковой профиль" для плоских
+                    // Скрываем всю секцию "Борт" для плоских
                     sideToggle.style.display = 'none';
                     sideContent.style.display = 'none';
                 }
@@ -6495,7 +6831,7 @@ const PRICES_DATA = {
             }
         }
         
-        // === ГЕНЕРАЦИЯ PDF ТЕХНИЧЕСКОГО ЗАДАНИЯ ===
+        // === ГЕНЕРАЦИЯ PDF ТЕХНИЧЕСКОГО ЗАДАНИЯ (открывает HTML в новой вкладке для печати) ===
         window.generatePDF = async function() {
             try {
                 log('⏳ Генерация PDF ТЗ...', 'info');
@@ -6507,35 +6843,484 @@ const PRICES_DATA = {
                     return;
                 }
                 
-                // Инициализируем jsPDF
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
+                // Функция удаления цен и улучшения форматирования
+                const cleanPrices = (text) => {
+                    // Удаляем цены
+                    text = text.replace(/[\d\s,]+₽/g, '');
+                    
+                    // Убираем фрезеровку
+                    if (text.includes('Фрезеровка') || text.includes('фрезеровка')) return '';
+                    
+                    // Убираем поклейку плёнки
+                    if (text.includes('Поклейка') || text.includes('поклейка')) return '';
+                    
+                    // Форматируем цвета плёнки: #FF9800 #FF9800 Oracal → цвет Оранжевый Oracal
+                    text = text.replace(/Плёнка\s+(#[0-9A-F]{6})\s+\1\s+/, 'Плёнка цвет ');
+                    
+                    // Убираем (включён в стоимость)
+                    text = text.replace(/\s*\(включён в стоимость\)/gi, '');
+                    
+                    // Для профиля добавляем "цвет" перед цветом
+                    text = text.replace(/Профиль - (Алюминиевый)\s+(\d+мм)/gi, 'Профиль - $1 цвет Белый $2');
+                    
+                    // Очистка лишних пробелов
+                    return text.replace(/:\s*$/g, '').replace(/\s+/g, ' ').trim();
+                };
                 
-                let yPos = 20;
+                // Функция генерации SVG-чертежа с размерными линиями
+                const generateDrawingSVG = (width, height, label, options = {}) => {
+                    const {
+                        frameWidth = null,
+                        frameHeight = null,
+                        hasBend = false,
+                        bendSize = 0
+                    } = options;
+                    
+                    // Масштаб: 1 единица SVG = 1мм реального объекта, но уменьшаем для вписывания в страницу
+                    const maxSvgWidth = 500; // макс ширина в пикселях
+                    const padding = 60; // отступ для размерных линий
+                    const scale = Math.min(maxSvgWidth / Math.max(width, height), 0.5);
+                    
+                    const scaledW = width * scale;
+                    const scaledH = height * scale;
+                    const svgWidth = scaledW + padding * 2;
+                    const svgHeight = scaledH + padding * 2;
+                    
+                    let svg = `<svg width="${svgWidth}" height="${svgHeight}" style="margin: 10mm auto; display: block; border: 1px solid #ddd; background: #fafafa;">`;
+                    
+                    // Основной прямоугольник
+                    svg += `<rect x="${padding}" y="${padding}" width="${scaledW}" height="${scaledH}" fill="none" stroke="#333" stroke-width="2"/>`;
+                    
+                    // Загиб (если есть)
+                    if (hasBend && bendSize > 0) {
+                        const bendScaled = bendSize * scale;
+                        // Левый борт
+                        svg += `<rect x="${padding - bendScaled}" y="${padding}" width="${bendScaled}" height="${scaledH}" fill="#e0e0e0" stroke="#666" stroke-width="1"/>`;
+                        // Правый борт
+                        svg += `<rect x="${padding + scaledW}" y="${padding}" width="${bendScaled}" height="${scaledH}" fill="#e0e0e0" stroke="#666" stroke-width="1"/>`;
+                        // Верхний борт
+                        svg += `<rect x="${padding}" y="${padding - bendScaled}" width="${scaledW}" height="${bendScaled}" fill="#e0e0e0" stroke="#666" stroke-width="1"/>`;
+                        // Нижний борт
+                        svg += `<rect x="${padding}" y="${padding + scaledH}" width="${scaledW}" height="${bendScaled}" fill="#e0e0e0" stroke="#666" stroke-width="1"/>`;
+                        
+                        // Размерная линия для загиба
+                        const bendY = padding - bendScaled - 15;
+                        svg += `<line x1="${padding - bendScaled}" y1="${bendY}" x2="${padding}" y2="${bendY}" stroke="#999" stroke-width="1" marker-end="url(#arrowend)" marker-start="url(#arrowstart)"/>`;
+                        svg += `<text x="${padding - bendScaled/2}" y="${bendY - 5}" fill="#666" font-size="10" text-anchor="middle">${bendSize}мм</text>`;
+                    }
+                    
+                    // Каркас (если есть)
+                    if (frameWidth && frameHeight) {
+                        const fw = frameWidth * scale;
+                        const fh = frameHeight * scale;
+                        const offsetX = (scaledW - fw) / 2;
+                        const offsetY = (scaledH - fh) / 2;
+                        svg += `<rect x="${padding + offsetX}" y="${padding + offsetY}" width="${fw}" height="${fh}" fill="none" stroke="#ff6600" stroke-width="2" stroke-dasharray="5,5"/>`;
+                        
+                        // Размерные линии для каркаса
+                        const frameLineY = padding + offsetY + fh + 15;
+                        svg += `<line x1="${padding + offsetX}" y1="${frameLineY}" x2="${padding + offsetX + fw}" y2="${frameLineY}" stroke="#ff6600" stroke-width="1" marker-end="url(#arrowend2)" marker-start="url(#arrowstart2)"/>`;
+                        svg += `<text x="${padding + offsetX + fw/2}" y="${frameLineY + 15}" fill="#ff6600" font-size="10" text-anchor="middle" font-weight="bold">каркас ${frameWidth}мм</text>`;
+                    }
+                    
+                    // Размерные линии
+                    // Горизонтальная (внизу)
+                    const dimLineY = padding + scaledH + 25;
+                    svg += `<line x1="${padding}" y1="${dimLineY}" x2="${padding + scaledW}" y2="${dimLineY}" stroke="#000" stroke-width="1" marker-end="url(#arrowend)" marker-start="url(#arrowstart)"/>`;
+                    svg += `<text x="${padding + scaledW/2}" y="${dimLineY + 15}" fill="#000" font-size="12" text-anchor="middle" font-weight="bold">${width} мм</text>`;
+                    
+                    // Вертикальная (справа)
+                    const dimLineX = padding + scaledW + 25;
+                    svg += `<line x1="${dimLineX}" y1="${padding}" x2="${dimLineX}" y2="${padding + scaledH}" stroke="#000" stroke-width="1" marker-end="url(#arrowend)" marker-start="url(#arrowstart)"/>`;
+                    svg += `<text x="${dimLineX + 10}" y="${padding + scaledH/2}" fill="#000" font-size="12" text-anchor="start" font-weight="bold" transform="rotate(90 ${dimLineX + 10} ${padding + scaledH/2})">${height} мм</text>`;
+                    
+                    // Маркеры стрелок
+                    svg += `<defs>
+                        <marker id="arrowstart" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,3 L3,0 L3,6 Z" fill="#000"/>
+                        </marker>
+                        <marker id="arrowend" markerWidth="10" markerHeight="10" refX="3" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M3,3 L0,0 L0,6 Z" fill="#000"/>
+                        </marker>
+                        <marker id="arrowstart2" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,3 L3,0 L3,6 Z" fill="#ff6600"/>
+                        </marker>
+                        <marker id="arrowend2" markerWidth="10" markerHeight="10" refX="3" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M3,3 L0,0 L0,6 Z" fill="#ff6600"/>
+                        </marker>
+                    </defs>`;
+                    
+                    svg += `</svg>`;
+                    return svg;
+                };
                 
-                // === ТИТУЛЬНЫЙ ЛИСТ ===
-                doc.setFontSize(20);
-                doc.setFont(undefined, 'bold');
-                doc.text('ТЕХНИЧЕСКОЕ ЗАДАНИЕ', 105, yPos, { align: 'center' });
-                yPos += 15;
+                // Получаем скриншот 3D сцены
+                let sceneImage = '';
+                try {
+                    if (renderer && scene && camera) {
+                        const oldBg = renderer.getClearColor(new THREE.Color());
+                        renderer.setClearColor(0xffffff, 1);
+                        renderer.render(scene, camera);
+                        sceneImage = renderer.domElement.toDataURL('image/jpeg', 0.9);
+                        renderer.setClearColor(oldBg);
+                        renderer.render(scene, camera);
+                    }
+                } catch(e) {
+                    console.warn('Ошибка получения скриншота:', e);
+                }
                 
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'normal');
-                doc.text(`Дата: ${new Date().toLocaleDateString('ru-RU')}`, 20, yPos);
-                yPos += 10;
+                // Создаём HTML контент
+                let htmlContent = `
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Техническое Задание - ${new Date().toLocaleDateString('ru-RU')}</title>
+    <style>
+        @media print {
+            body { margin: 0; padding: 20mm; }
+            h1, h2, h3 { page-break-after: avoid; }
+            .page-break { page-break-before: always; }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+        }
+        h1 {
+            font-size: 20pt;
+            text-align: center;
+            margin-bottom: 10mm;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5mm;
+        }
+        h2 {
+            font-size: 14pt;
+            margin-top: 10mm;
+            margin-bottom: 3mm;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2mm;
+        }
+        h3 {
+            font-size: 11pt;
+            margin-top: 5mm;
+            margin-bottom: 2mm;
+        }
+        .param {
+            margin: 2mm 0;
+        }
+        .item {
+            margin-left: 5mm;
+            font-size: 8pt;
+            line-height: 1.3;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 5mm auto;
+        }
+        .print-button {
+            position: fixed;
+            top: 10mm;
+            right: 10mm;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14pt;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .print-button:hover {
+            background: #45a049;
+        }
+        @media print {
+            .print-button { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">🖨️ Печать / Сохранить PDF</button>
+    
+    <h1>ТЕХНИЧЕСКОЕ ЗАДАНИЕ</h1>
+    <div class="param" style="font-size:12pt; margin-bottom:10mm;">
+        <strong>Дата:</strong> ${new Date().toLocaleDateString('ru-RU')}
+    </div>
+    
+    <h2>МАКЕТ 3D МОДЕЛИ</h2>
+    ${sceneImage ? `<img src="${sceneImage}" alt="3D модель" style="max-height:100mm;">` : '<p style="font-style:italic;">(изображение недоступно)</p>'}
+    
+                    <h2>ОБЩИЕ ПАРАМЕТРЫ КОНСТРУКЦИИ</h2>
+                    <div class="param"><strong>Тип конструкции:</strong> ${state.construction === 'flat' ? 'Плоская (без борта)' : 'Объёмная (с бортом)'}</div>
+                    ${state.construction === 'volumetric' ? `<div class="param"><strong>Высота борта:</strong> ${state.bortHeight} мм</div>` : ''}
+                    <div class="param"><strong>Подсветка:</strong> ${state.hasBacklight ? 'Да' : 'Нет'}</div>
+                    ${state.hasBacklight ? `<div class="param"><strong>Тип диодов:</strong> ${state.ledType}</div>` : ''}
+                    <div class="param"><strong>Дистанционные держатели:</strong> ${state.hasSpacers ? 'Да' : 'Нет'}</div>
+                    ${bases && bases.length > 0 ? `<div class="param"><strong>Количество основ:</strong> ${bases.length} шт</div>` : ''}
+`;
                 
-                // Сохраняем PDF
-                doc.save(`TZ_${Date.now()}.pdf`);
-                log('✅ PDF ТЗ скачан!', 'success');
-                alert('✅ PDF Технического Задания скачан!');
+                // ЧЕРТЕЖИ С ОПИСАНИЕМ МАТЕРИАЛОВ (ОБЪЕДИНЕНЫ)
+                htmlContent += `<div class="page-break"></div><h2>ЧЕРТЕЖИ И СПЕЦИФИКАЦИЯ</h2>`;
+                
+                // Чертежи SVG объектов + материалы
+                for (let i = 0; i < svgGroups.length; i++) {
+                    const obj = svgGroups[i];
+                    const cost = calculateObjectCost(obj);
+                    const w = Math.round(obj.currentWidth || 0);
+                    const h = Math.round(obj.currentHeight || 0);
+                    
+                    htmlContent += `
+                        <h3>${i + 1}. ${obj.name || 'Объект-' + (i + 1)}</h3>
+                        <div class="param"><strong>Размеры:</strong> ${w} × ${h} мм | <strong>Площадь:</strong> ${cost.areaM2.toFixed(3)} м² | <strong>Периметр:</strong> ${cost.perimeterM.toFixed(2)} м</div>
+                    `;
+                    
+                    // Добавляем чертеж с полным SVG-контуром
+                    if (obj.originalSvg) {
+                        // Парсим оригинальный SVG и извлекаем viewBox и пути
+                        const parser = new DOMParser();
+                        const svgDoc = parser.parseFromString(obj.originalSvg, 'image/svg+xml');
+                        const svgElement = svgDoc.querySelector('svg');
+                        
+                        // Получаем viewBox из оригинального SVG
+                        let viewBox = svgElement.getAttribute('viewBox');
+                        if (!viewBox) {
+                            // Если нет viewBox, создаем из width/height
+                            const svgWidth = svgElement.getAttribute('width') || w;
+                            const svgHeight = svgElement.getAttribute('height') || h;
+                            viewBox = `0 0 ${svgWidth} ${svgHeight}`;
+                        }
+                        
+                        const [vbX, vbY, vbW, vbH] = viewBox.split(' ').map(Number);
+                        
+                        // ИСПРАВЛЕНИЕ: Клонируем весь SVG контент целиком, включая группы и трансформации
+                        const svgContent = svgElement.innerHTML;
+                        
+                        if (svgContent && svgContent.trim()) {
+                            // Вычисляем размеры контейнера с учетом отступов для размерных линий
+                            const padding = Math.max(vbW, vbH) * 0.15;
+                            const totalW = vbW + padding * 2;
+                            const totalH = vbH + padding * 2;
+                            const newViewBox = `${vbX - padding} ${vbY - padding} ${totalW} ${totalH}`;
+                            
+                            htmlContent += `<div style="background: #fafafa; padding: 20px; border: 1px solid #ddd; margin: 15px 0; page-break-inside: avoid;">`;
+                            htmlContent += `<svg width="100%" height="auto" viewBox="${newViewBox}" preserveAspectRatio="xMidYMid meet" style="display: block; margin: 0 auto; max-width: 900px;">`;
+                            
+                            // Вставляем весь SVG контент (включая группы, трансформации и т.д.)
+                            htmlContent += `<g fill="#333" stroke="#333" stroke-width="${Math.max(vbW, vbH) * 0.002}">${svgContent}</g>`;
+                            
+                            // Размерные линии с правильным позиционированием
+                            const fontSize = Math.max(vbW, vbH) * 0.04;
+                            htmlContent += `<text x="${vbX + vbW/2}" y="${vbY + vbH + padding * 0.5}" fill="#000" font-size="${fontSize}" text-anchor="middle" font-weight="bold">${w} мм</text>`;
+                            htmlContent += `<text x="${vbX - padding * 0.5}" y="${vbY + vbH/2}" fill="#000" font-size="${fontSize}" text-anchor="middle" font-weight="bold" transform="rotate(-90, ${vbX - padding * 0.5}, ${vbY + vbH/2})">${h} мм</text>`;
+                            htmlContent += `</svg>`;
+                            htmlContent += `</div>`;
+                        } else {
+                            // Fallback: простой прямоугольник с размерами
+                            htmlContent += generateDrawingSVG(w, h, obj.name || 'Объект-' + (i + 1));
+                        }
+                    } else {
+                        // Fallback: простой прямоугольник с размерами
+                        htmlContent += generateDrawingSVG(w, h, obj.name || 'Объект-' + (i + 1));
+                    }
+                    
+                    // МАТЕРИАЛЫ ПРЯМО ПОД ЧЕРТЕЖОМ
+                    htmlContent += '<div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-left: 4px solid #2196f3;">';
+                    
+                    // ЛИЦО
+                    if (cost.breakdownFace.length > 0) {
+                        htmlContent += '<h4 style="margin: 5px 0;">ЛИЦО:</h4>';
+                        cost.breakdownFace.forEach(line => {
+                            const clean = cleanPrices(line);
+                            if (clean) htmlContent += `<div class="item">• ${clean}</div>`;
+                        });
+                    }
+                    
+                    // БОРТ
+                    if (cost.breakdownSide.length > 0) {
+                        htmlContent += '<h4 style="margin: 10px 0 5px 0;">БОРТ:</h4>';
+                        cost.breakdownSide.forEach(line => {
+                            const clean = cleanPrices(line);
+                            if (clean) htmlContent += `<div class="item">• ${clean}</div>`;
+                        });
+                    }
+                    
+                    // ПОДСВЕТКА
+                    if (cost.breakdownLight.length > 0) {
+                        htmlContent += '<h4 style="margin: 10px 0 5px 0;">ПОДСВЕТКА:</h4>';
+                        cost.breakdownLight.forEach(line => {
+                            const clean = cleanPrices(line);
+                            if (clean) htmlContent += `<div class="item">• ${clean}</div>`;
+                        });
+                    }
+                    
+                    // КАРКАС
+                    if (cost.breakdownFrame.length > 0) {
+                        htmlContent += '<h4 style="margin: 10px 0 5px 0;">КАРКАС:</h4>';
+                        
+                        // Группируем строки каркаса по профилям
+                        let currentProfile = [];
+                        let frameGroups = [];
+                        
+                        cost.breakdownFrame.forEach(line => {
+                            const clean = cleanPrices(line);
+                            if (!clean) return;
+                            
+                            // Если это строка "Профиль #N:", начинаем новую группу
+                            if (clean.includes('Профиль #')) {
+                                if (currentProfile.length > 0) {
+                                    frameGroups.push(currentProfile);
+                                }
+                                currentProfile = [clean];
+                            } else if (clean.includes('Итого:')) {
+                                currentProfile.push(clean);
+                                frameGroups.push(currentProfile);
+                                currentProfile = [];
+                            } else {
+                                currentProfile.push(clean);
+                            }
+                        });
+                        
+                        // Добавляем последнюю группу если есть
+                        if (currentProfile.length > 0) {
+                            frameGroups.push(currentProfile);
+                        }
+                        
+                        // Выводим группы
+                        frameGroups.forEach((group, idx) => {
+                            group.forEach(line => {
+                                htmlContent += `<div class="item">• ${line}</div>`;
+                            });
+                            // Добавляем пустую строку между группами
+                            if (idx < frameGroups.length - 1) {
+                                htmlContent += '<div style="height: 5px;"></div>';
+                            }
+                        });
+                    }
+                    
+                    htmlContent += '</div>';  // закрываем блок материалов
+                }
+                
+                // Чертежи основ + материалы
+                if (bases && bases.length > 0) {
+                    bases.forEach((base, idx) => {
+                        const hasBend = base.material && base.material.startsWith('composite') && base.bend > 0;
+                        const bendSize = hasBend ? base.bend : 0;
+                        const fullWidth = base.width + (bendSize * 2);
+                        const fullHeight = base.height + (bendSize * 2);
+                        const baseAreaM2 = (base.width * base.height) / 1000000;
+                        const basePerimeterM = ((base.width + base.height) * 2) / 1000;
+                        
+                        htmlContent += `
+                            <h3>${svgGroups.length + idx + 1}. ОСНОВА ${bases.length > 1 ? '#' + (idx + 1) : ''}</h3>
+                            <div class="param"><strong>Размеры:</strong> ${base.width} × ${base.height} мм${hasBend ? ` (с загибом ${bendSize}мм: ${fullWidth} × ${fullHeight} мм)` : ''}</div>
+                            <div class="param"><strong>Толщина:</strong> ${base.thickness} мм | <strong>Площадь:</strong> ${baseAreaM2.toFixed(3)} м²</div>
+                        `;
+                        
+                        // Чертеж основы
+                        htmlContent += generateDrawingSVG(base.width, base.height, `ОСНОВА ${bases.length > 1 ? '#' + (idx + 1) : ''}`, {
+                            frameWidth: null,
+                            frameHeight: null,
+                            hasBend: hasBend,
+                            bendSize: bendSize
+                        });
+                        
+                        // МАТЕРИАЛЫ ОСНОВЫ
+                        const baseMaterialData = PRICES_DATA.materials[base.material];
+                        if (baseMaterialData) {
+                            htmlContent += '<div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-left: 4px solid #4caf50;">';
+                            htmlContent += '<h4 style="margin: 5px 0;">МАТЕРИАЛ ОСНОВЫ:</h4>';
+                            htmlContent += `<div class="item">• ${baseMaterialData.name} ${base.thickness}мм (${baseAreaM2.toFixed(3)} м²)</div>`;
+                            
+                            if (hasBend) {
+                                const bendAreaMm2 = 2 * bendSize * (base.width + base.height);
+                                const bendAreaM2 = bendAreaMm2 / 1000000;
+                                htmlContent += `<div class="item">• Материал загиба ${bendSize}мм (${bendAreaM2.toFixed(3)} м²)</div>`;
+                            }
+                            htmlContent += '</div>';
+                        }
+                        
+                        // Каркас (если есть)
+                        let frameWidth = null, frameHeight = null;
+                        if (base.hasFrame) {
+                            if (base.bend > 0) {
+                                frameWidth = base.width - (base.thickness * 2);
+                                frameHeight = base.height - (base.thickness * 2);
+                            } else {
+                                frameWidth = base.width - 8;
+                                frameHeight = base.height - 8;
+                            }
+                            const framePerimeterM = ((frameWidth + frameHeight) * 2) / 1000;
+                            const crossbarStep = 800;
+                            const profileSizeMm = parseInt(base.frameProfile.split('x')[0]);
+                            const crossbarCount = Math.floor((frameWidth - profileSizeMm * 2) / crossbarStep);
+                            const crossbarLengthM = crossbarCount * ((frameHeight - profileSizeMm * 2) / 1000);
+                            const totalProfileM = framePerimeterM + crossbarLengthM;
+                            
+                            htmlContent += `<h3 style="margin-top: 20px;">КАРКАС для основы ${bases.length > 1 ? '#' + (idx + 1) : ''}</h3>`;
+                            htmlContent += `<div class="param"><strong>Размер:</strong> ${frameWidth} × ${frameHeight} мм | <strong>Периметр:</strong> ${framePerimeterM.toFixed(2)} м</div>`;
+                            
+                            // Чертеж каркаса
+                            htmlContent += generateDrawingSVG(frameWidth, frameHeight, `КАРКАС ${bases.length > 1 ? '#' + (idx + 1) : ''}`, {
+                                frameWidth: null,
+                                frameHeight: null,
+                                hasBend: false,
+                                bendSize: 0
+                            });
+                            
+                            // МАТЕРИАЛЫ КАРКАСА
+                            htmlContent += '<div style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-left: 4px solid #ff9800;">';
+                            htmlContent += '<h4 style="margin: 5px 0;">МАТЕРИАЛ КАРКАСА:</h4>';
+                            htmlContent += `<div class="item">• Профиль ${base.frameProfile}мм (${totalProfileM.toFixed(2)}м)</div>`;
+                            
+                            if (base.frameColor && base.frameColor !== '#808080') {
+                                const frameColorName = getOracalColorName(base.frameColor);
+                                htmlContent += `<div class="item">• Покраска Oracal 641 ${frameColorName} (${totalProfileM.toFixed(2)}м)</div>`;
+                            }
+                            htmlContent += '</div>';
+                        }
+                    });
+                }
+                
+                // Итого
+                htmlContent += `<div class="page-break"></div><h2>ИТОГО ПО ПРОЕКТУ</h2>`;
+                htmlContent += `<div class="param">Количество объектов: ${svgGroups.length} шт</div>`;
+                if (bases && bases.length > 0) {
+                    htmlContent += `<div class="param">Количество основ: ${bases.length} шт</div>`;
+                }
+                htmlContent += `<hr style="margin:10mm 0;"><div style="text-align:center; font-size:9pt; font-style:italic;">Составлено в калькуляторе ВЫВЕСКИ 3D PRO v2.0</div>`;
+                htmlContent += `</body></html>`;
+                
+                // Создаём HTML-файл для скачивания
+                const blob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Генерируем уникальное имя файла: TZ_2026-01-09_14-35-21.html
+                const now = new Date();
+                const date = now.toISOString().slice(0, 10);  // 2026-01-09
+                const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');  // 14-35-21
+                a.download = `TZ_${date}_${time}.html`;
+                
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log('✅ ТЗ скачано как HTML!', 'success');
+                alert('✅ Техническое Задание скачано как HTML-файл!\n\nОткройте файл в браузере и нажмите Ctrl+P для сохранения в PDF.');
                 
             } catch (error) {
                 console.error('[generatePDF] Ошибка:', error);
-                log('❌ Ошибка генерации PDF: ' + error.message, 'error');
+                log('❌ Ошибка генерации ТЗ: ' + error.message, 'error');
                 alert('❌ Ошибка: ' + error.message);
             }
         }
@@ -6656,13 +7441,15 @@ const PRICES_DATA = {
             const pricePerCmInput = document.getElementById('price-per-cm-global');
             const pricePerCm = parseFloat(pricePerCmInput?.value) || 0;
             
-            // Считаем общую высоту ВСЕХ элементов (сумма высот всех букв/элементов)
+            // Считаем ОБЩУЮ высоту ВСЕХ объектов (высота SVG × количество букв)
             let totalHeightCm = 0;
             svgGroups.forEach(obj => {
                 if (obj.visible) {
-                    // Используем totalElementsHeight - это сумма высот всех элементов внутри SVG
-                    const heightMm = obj.totalElementsHeight || obj.realHeight || 0;
-                    totalHeightCm += (heightMm / 10);
+                    // Высота одного SVG × количество БУКВ (каждая буква = 2 paths: контур + отверстие)
+                    const heightMm = obj.realHeight || 0;
+                    const pathsCount = obj.pathsCount || 1;
+                    const lettersCount = Math.ceil(pathsCount / 2); // Делим на 2, т.к. буква = контур + дырка
+                    totalHeightCm += (heightMm / 10) * lettersCount;
                 }
             });
             
@@ -7126,24 +7913,31 @@ const PRICES_DATA = {
                     breakdownFrame.push(`  Итого: ${typeTotalLengthM.toFixed(2)} м.п. × ${frameData.price}₽ = ${typeCost.toFixed(0)} ₽`);
                 });
                 
-                // Покраска (если включена)
-                if (state.framePainting) {
-                    const paintData = PRICES_DATA.hardware['paint-spray'];
-                    const sprayCansCoverage = paintData.coverage / 1000; // 6 метров на баллон
-                    const sprayNeeded = Math.ceil(totalFrameLengthM / sprayCansCoverage);
-                    const paintCost = sprayNeeded * paintData.price;
-                    total += paintCost;
-                    materialsCost += paintCost;
-                    breakdownFrame.push(`Покраска: ${sprayNeeded} баллон(ов) × ${paintData.price}₽ = ${paintCost.toFixed(0)} ₽`);
-                }
+                // Покраска (всегда, если есть каркас)
+                const paintData = PRICES_DATA.hardware['paint-spray'];
+                const sprayCansCoverage = paintData.coverage / 1000; // 6 метров на баллон
+                const sprayNeeded = Math.ceil(totalFrameLengthM / sprayCansCoverage);
+                const paintCost = sprayNeeded * paintData.price;
+                total += paintCost;
+                materialsCost += paintCost;
+                breakdownFrame.push(`Покраска: ${sprayNeeded} баллон(ов) × ${paintData.price}₽ = ${paintCost.toFixed(0)} ₽`);
                 
-                // Работа по изготовлению каркаса
-                const frameWork = PRICES_DATA.work['frame-assembly'] || { hours_per_m: 0.3, rate_per_hour: 500 };
-                const frameWorkHours = totalFrameLengthM * (frameWork.hours_per_m || 0.3);
-                const frameWorkCost = frameWorkHours * (frameWork.rate_per_hour || 500);
-                total += frameWorkCost;
-                workCost += frameWorkCost;
-                breakdownWork.push(`Изготовление каркаса (${frameWorkHours.toFixed(1)}ч × 500₽): ${frameWorkCost.toFixed(0)} ₽`);
+                // Работа по сварке каркаса (только для стальных труб)
+                // Формула: (материал + покраска) * 2 + 20% материала
+                const totalFrameMaterialCost = Object.keys(frameByType).reduce((sum, type) => {
+                    const frameData = PRICES_DATA.frame[type];
+                    const profiles = frameByType[type];
+                    const typeTotalLengthM = profiles.reduce((s, p) => s + p.length / 1000, 0);
+                    return sum + typeTotalLengthM * frameData.price;
+                }, 0);
+                
+                const isSteel = Object.keys(frameByType).some(type => type.startsWith('steel-'));
+                if (isSteel) {
+                    const weldingCost = (totalFrameMaterialCost + paintCost) * 2 + totalFrameMaterialCost * 0.2;
+                    total += weldingCost;
+                    workCost += weldingCost;
+                    breakdownWork.push(`Сварка каркаса: ${weldingCost.toFixed(0)} ₽`);
+                }
                 
             } else if (state.frameType && state.frameType !== 'none') {
                 // СТАРАЯ ЛОГИКА: автоматический расчёт (если профили не добавлены вручную)
@@ -7196,22 +7990,24 @@ const PRICES_DATA = {
                     breakdownFrame.push(`  ${cuttingDetails}`);
                     breakdownFrame.push(`  ${frameLengthM.toFixed(2)} м.п. × ${frameData.price}₽ = ${frameCost.toFixed(0)} ₽`);
                     
-                    if (state.framePainting) {
-                        const paintData = PRICES_DATA.hardware['paint-spray'];
-                        const sprayCansCoverage = paintData.coverage / 1000;
-                        const sprayNeeded = Math.ceil(frameLengthM / sprayCansCoverage);
-                        const paintCost = sprayNeeded * paintData.price;
-                        total += paintCost;
-                        materialsCost += paintCost;
-                        breakdownFrame.push(`  Покраска: ${sprayNeeded} баллон(ов) × ${paintData.price}₽ = ${paintCost.toFixed(0)} ₽`);
-                    }
+                    // Покраска (всегда)
+                    const paintData = PRICES_DATA.hardware['paint-spray'];
+                    const sprayCansCoverage = paintData.coverage / 1000;
+                    const sprayNeeded = Math.ceil(frameLengthM / sprayCansCoverage);
+                    const paintCost = sprayNeeded * paintData.price;
+                    total += paintCost;
+                    materialsCost += paintCost;
+                    breakdownFrame.push(`  Покраска: ${sprayNeeded} баллон(ов) × ${paintData.price}₽ = ${paintCost.toFixed(0)} ₽`);
                     
-                    const frameWork = PRICES_DATA.work['frame-assembly'] || { hours_per_m: 0.3, rate_per_hour: 500 };
-                    const frameWorkHours = frameLengthM * (frameWork.hours_per_m || 0.3);
-                    const frameWorkCost = frameWorkHours * (frameWork.rate_per_hour || 500);
-                    total += frameWorkCost;
-                    workCost += frameWorkCost;
-                    breakdownWork.push(`Изготовление каркаса (${frameWorkHours.toFixed(1)}ч × 500₽): ${frameWorkCost.toFixed(0)} ₽`);
+                    // Работа по сварке каркаса (только для стальных труб)
+                    // Формула: (материал + покраска) * 2 + 20% материала
+                    const isSteel = state.frameType.startsWith('steel-');
+                    if (isSteel) {
+                        const weldingCost = (frameCost + paintCost) * 2 + frameCost * 0.2;
+                        total += weldingCost;
+                        workCost += weldingCost;
+                        breakdownWork.push(`Сварка каркаса: ${weldingCost.toFixed(0)} ₽`);
+                    }
                 }
             }
             
@@ -7365,20 +8161,21 @@ const PRICES_DATA = {
                         
                         breakdownBase.push(`Каркас ${bases.length > 1 ? '#' + (idx + 1) : ''} - профиль ${base.frameProfile}мм (${totalProfileM.toFixed(2)}м × ${profilePrice}₽): ${frameMaterialCost.toFixed(0)} ₽`);
                         
-                        // Покраска каркаса Oracal 641 (если не серый)
-                        if (base.frameColor && base.frameColor !== '#808080') {
-                            const paintCost = totalProfileM * 150; // 150₽ за погонный метр покраски
-                            total += paintCost;
-                            materialsCost += paintCost;
-                            breakdownBase.push(`Покраска каркаса ${bases.length > 1 ? '#' + (idx + 1) : ''} Oracal 641 ${frameColorNameOnly} ${frameColorNumber} (${totalProfileM.toFixed(2)}м × 150₽): ${paintCost.toFixed(0)} ₽`);
-                        }
+                        // Покраска каркаса (всегда)
+                        const paintData = PRICES_DATA.hardware['paint-spray'];
+                        const sprayCansCoverage = paintData.coverage / 1000; // 6 метров на баллон
+                        const sprayNeeded = Math.ceil(totalProfileM / sprayCansCoverage);
+                        const framePaintCost = sprayNeeded * paintData.price;
+                        total += framePaintCost;
+                        materialsCost += framePaintCost;
+                        breakdownBase.push(`Покраска каркаса ${bases.length > 1 ? '#' + (idx + 1) : ''}: ${sprayNeeded} баллон(ов) × ${paintData.price}₽ = ${framePaintCost.toFixed(0)} ₽`);
                         
-                        // Работа по сборке каркаса
-                        const frameWorkHours = totalProfileM * 0.2; // 0.2 часа на метр
-                        const frameWorkCost = frameWorkHours * 500;
-                        total += frameWorkCost;
-                        workCost += frameWorkCost;
-                        breakdownWork.push(`Сборка каркаса ${bases.length > 1 ? '#' + (idx + 1) : ''} (${frameWorkHours.toFixed(1)}ч × 500₽): ${frameWorkCost.toFixed(0)} ₽`);
+                        // Работа по сварке каркаса
+                        // Формула: (материал + покраска) * 2 + 20% материала
+                        const frameWeldingCost = (frameMaterialCost + framePaintCost) * 2 + frameMaterialCost * 0.2;
+                        total += frameWeldingCost;
+                        workCost += frameWeldingCost;
+                        breakdownWork.push(`Сварка каркаса ${bases.length > 1 ? '#' + (idx + 1) : ''}: ${frameWeldingCost.toFixed(0)} ₽`);
                     }
                 });
             }
@@ -7618,13 +8415,15 @@ const PRICES_DATA = {
                     const existingPricePerCmInput = document.getElementById('price-per-cm-global');
                     const savedPricePerCm = existingPricePerCmInput ? parseFloat(existingPricePerCmInput.value) || 0 : 0;
                     
-                    // Считаем ОБЩУЮ высоту ВСЕХ элементов (сумма высот всех букв/элементов)
+                    // Считаем ОБЩУЮ высоту ВСЕХ объектов (высота SVG × количество букв)
                     let totalHeightCm = 0;
                     svgGroups.forEach(obj => {
                         if (obj.visible) {
-                            // Используем totalElementsHeight - это сумма высот всех элементов внутри SVG
-                            const heightMm = obj.totalElementsHeight || obj.realHeight || 0;
-                            totalHeightCm += (heightMm / 10);
+                            // Высота одного SVG × количество БУКВ (каждая буква = 2 paths: контур + отверстие)
+                            const heightMm = obj.realHeight || 0;
+                            const pathsCount = obj.pathsCount || 1;
+                            const lettersCount = Math.ceil(pathsCount / 2); // Делим на 2, т.к. буква = контур + дырка
+                            totalHeightCm += (heightMm / 10) * lettersCount;
                         }
                     });
                     
@@ -7652,6 +8451,42 @@ const PRICES_DATA = {
                     html += `<div style="margin-top: 6px; font-size: 9px; color: rgba(255,255,255,0.4); font-style: italic;">
                         PRO расчёт • Редактируемая маржа
                     </div>`;
+                    
+                    // РАЗБИВКА ПО ВСЕМ ОБЪЕКТАМ И ОСНОВАМ
+                    html += `<div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid rgba(255,209,0,0.5);">`;
+                    html += `<div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 8px; font-weight: 600;">📋 ПОЛНАЯ РАЗБИВКА:</div>`;
+                    
+                    let totalAllObjects = 0;
+                    let totalAllCost = 0;
+                    let totalAllMargin = 0;
+                    
+                    // SVG объекты
+                    svgGroups.forEach((obj, idx) => {
+                        if (obj.visible) {
+                            const objCost = calculateObjectCost(obj);
+                            const marginPercent = document.getElementById(`margin-input-${obj.id}`)?.value || 100;
+                            const objMargin = objCost.totalWithoutMargin * (parseFloat(marginPercent) / 100);
+                            const objTotalWithMargin = objCost.totalWithoutMargin + objMargin;
+                            
+                            totalAllCost += objCost.totalWithoutMargin;
+                            totalAllMargin += objMargin;
+                            totalAllObjects += objTotalWithMargin;
+                            
+                            const isActive = idx === activeSvgIndex;
+                            html += `<div style="padding: 5px 0; color: ${isActive ? 'var(--accent-color)' : 'rgba(255,255,255,0.7)'}; font-weight: ${isActive ? '600' : '400'}; font-size: 11px; line-height: 1.6;">`;
+                            html += `${idx + 1}. ${obj.name}:<br>`;
+                            html += `<span style="font-size: 10px; margin-left: 10px;">себестоимость - ${Math.round(objCost.totalWithoutMargin).toLocaleString('ru-RU')} ₽, маржа - ${Math.round(objMargin).toLocaleString('ru-RU')} ₽</span>`;
+                            html += `</div>`;
+                        }
+                    });
+                    
+                    // Основы (пропускаем, так как calculateBaseCost не определена)
+                    // Основы уже учтены в total-cost-list ниже
+                    
+                    html += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,209,0,0.3); font-weight: 700; font-size: 12px; color: var(--accent-color);">`;
+                    html += `ОБЩАЯ СУММА: ${Math.round(totalAllObjects).toLocaleString('ru-RU')} ₽`;
+                    html += `</div>`;
+                    html += `</div>`;
                     
                     
                     currentCostDiv.innerHTML = html;
@@ -8473,32 +9308,21 @@ const PRICES_DATA = {
                 state.frameType = e.target.value;
                 
                 // Показываем/скрываем опции
-                const paintingGroup = document.getElementById('frame-painting-group');
                 const frame3dGroup = document.getElementById('frame-3d-group');
                 
                 const isSelected = e.target.value !== 'none';
-                paintingGroup.style.display = isSelected ? 'block' : 'none';
                 frame3dGroup.style.display = isSelected ? 'block' : 'none';
                 const frameColorGroup = document.getElementById('frame-color-group');
                 if (frameColorGroup) frameColorGroup.style.display = isSelected ? 'block' : 'none';
                 
                 // Сбрасываем при выборе "Без каркаса"
                 if (!isSelected) {
-                    state.framePainting = false;
-                    document.getElementById('frame-has-painting').checked = false;
                     state.frameColor = '#FFFFFF';
                 }
                 
                 updateCostCalculator();
                 log(`Каркас: ${state.frameType}`, 'info');
             });
-            
-            // Функция для покраски каркаса
-            window.toggleFramePainting = function(value) {
-                state.framePainting = value;
-                updateCostCalculator();
-                log(`Покраска каркаса: ${value ? 'ВКЛ' : 'ВЫКЛ'}`, 'info');
-            };
             
             // Функция для изменения цвета каркаса
             window.setFrameColor = function(color) {
@@ -8607,10 +9431,10 @@ const PRICES_DATA = {
                 state.baseMaterial = e.target.value;
                 
                 // Показываем/скрываем опции в зависимости от материала
-                const foldingGroup = document.getElementById('base-folding-group');
                 const cornerGroup = document.getElementById('base-corner-group');
                 const sizeGroup = document.getElementById('base-size-group');
                 const colorGroup = document.getElementById('base-color-group');
+                const sizeColorWrapper = document.getElementById('base-size-color-wrapper');
                 const frameGroup = document.getElementById('base-frame-group');
                 const baseGroup = document.getElementById('base-3d-group');
                 
@@ -8618,16 +9442,15 @@ const PRICES_DATA = {
                 const isPvcOrPoly = e.target.value.startsWith('pvc') || e.target.value.startsWith('polycarbonate');
                 const hasBase = e.target.value !== 'none';
                 
-                foldingGroup.style.display = isComposite ? 'block' : 'none';
                 cornerGroup.style.display = isPvcOrPoly ? 'block' : 'none';
                 sizeGroup.style.display = hasBase ? 'block' : 'none';
                 colorGroup.style.display = hasBase ? 'block' : 'none';
+                if (sizeColorWrapper) sizeColorWrapper.style.display = hasBase ? 'flex' : 'none';
                 frameGroup.style.display = hasBase ? 'block' : 'none';
                 baseGroup.style.display = hasBase ? 'block' : 'none';
                 
                 // Сбрасываем опции при смене материала
                 if (!isComposite) {
-                    state.baseFolding = false;
                     state.baseBend = 0;
                 }
                 if (!isPvcOrPoly) state.baseCorner = 'none';
@@ -8636,15 +9459,6 @@ const PRICES_DATA = {
                 updateCostCalculator();
                 log(`Основа: ${state.baseMaterial}`, 'info');
             });
-            
-            // Функции для опций основы
-            window.toggleBaseOption = function(option, value) {
-                if (option === 'folding') {
-                    state.baseFolding = value;
-                }
-                updateCostCalculator();
-                log(`Подворот: ${value ? 'ВКЛ' : 'ВЫКЛ'}`, 'info');
-            };
             
             window.updateBaseCorner = function(cornerType) {
                 state.baseCorner = cornerType;
@@ -8754,6 +9568,14 @@ const PRICES_DATA = {
                 const [type, thickness] = e.target.value.split('-');
                 state.sideMaterial = { type, thickness: parseInt(thickness) };
                 
+                // Для алюминия устанавливаем высоту борта по размеру профиля
+                if (type === 'aluminum') {
+                    const bortHeight = parseInt(thickness) * 10; // 4 -> 40мм, 6 -> 60мм, 8 -> 80мм, 10 -> 100мм
+                    state.bortHeight = bortHeight;
+                    document.getElementById('bort-height').value = bortHeight;
+                    document.getElementById('bort-height-display').value = bortHeight;
+                }
+                
                 // Для алюминия скрываем поле "Толщина борта" (размер фиксированный)
                 const bortHeightGroup = document.querySelector('#side-section .field-group:last-child');
                 if (bortHeightGroup) {
@@ -8765,7 +9587,7 @@ const PRICES_DATA = {
                 }
                 
                 update3DLetter();
-                log(`Материал борта: ${type} ${thickness}${type === 'aluminum' ? 'см' : 'мм'}`, 'info');
+                log(`Материал борта: ${type} ${thickness}${type === 'aluminum' ? 'см' : 'мм'}, высота борта: ${state.bortHeight}мм`, 'info');
             });
             
             // Цвет борта теперь управляется через карусель (см. setSideColor)
@@ -9185,16 +10007,27 @@ const PRICES_DATA = {
             // Обработчик для кнопки сворачивания панели
             const panelToggle = document.getElementById('panel-toggle');
             const overlayRight = document.querySelector('.overlay-right');
+            const sectionIndicator = document.getElementById('section-indicator');
             if (panelToggle && overlayRight) {
                 panelToggle.addEventListener('click', () => {
                     overlayRight.classList.toggle('collapsed');
                     panelToggle.classList.toggle('collapsed');
                     
-                    // Обновляем позицию индикатора
-                    setTimeout(() => {
-                        const firstSection = document.querySelector('.section-title');
-                        if (firstSection) updateSectionIndicator(firstSection);
-                    }, 350);
+                    // Скрываем/показываем индикатор
+                    if (sectionIndicator) {
+                        if (overlayRight.classList.contains('collapsed')) {
+                            sectionIndicator.style.opacity = '0';
+                            sectionIndicator.style.right = '-100px';
+                        } else {
+                            sectionIndicator.style.opacity = '1';
+                            sectionIndicator.style.right = '364px';
+                            // Обновляем позицию индикатора
+                            setTimeout(() => {
+                                const firstSection = document.querySelector('.section-title');
+                                if (firstSection) updateSectionIndicator(firstSection);
+                            }, 350);
+                        }
+                    }
                 });
             }
             
@@ -9252,14 +10085,6 @@ const PRICES_DATA = {
                 <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">Нажмите снова чтобы заменить</div>
             `;
             
-            const infoEl = document.getElementById('svg-info');
-            infoEl.innerHTML = `
-                <div style="color: #4CAF50; font-size: 11px;">✅ SVG загружен: <strong>test-square-50cm.svg</strong></div>
-                <div style="font-size: 10px; opacity: 0.7; margin-top: 3px;">
-                    Размер: 500mm × 500mm
-                </div>
-            `;
-            infoEl.style.display = 'block';
             
             state.svgLoaded = true;
             log('ТЕСТ: SVG загружен (квадрат)', 'success');
@@ -9293,11 +10118,6 @@ const PRICES_DATA = {
                     <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">Нажмите снова чтобы заменить</div>
                 `;
                 
-                const infoEl = document.getElementById('svg-info');
-                infoEl.innerHTML = `
-                    <div style="color: #4CAF50; font-size: 11px;">✅ SVG загружен: <strong>СОЛЬ.svg</strong></div>
-                `;
-                infoEl.style.display = 'block';
                 
                 state.svgLoaded = true;
                 log('✅ ТЕСТ: SVG загружен (СОЛЬ)', 'success');
